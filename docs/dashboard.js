@@ -15,7 +15,7 @@ const surprise = select("surprise-brief");
 const briefStatus = select("brief-status");
 const cards = select("cards");
 const sort = select("sort");
-const live = select("live-search");
+const demoMode = select("demo-mode");
 const harnessChoice = select("run-harness");
 const savedRuns = select("saved-runs");
 const region = select("region");
@@ -25,16 +25,16 @@ const demoChoice = select("demo-scenario");
 const gridMount = document.querySelector('meta[name="gift-search-mount"]')?.content;
 const liveApi = (path) => `${gridMount ?? "."}/api/${path}`;
 const reportFragment = "#report=";
-const teamIntroduction = "Follow the team from first ideas to shortlist.";
+const teamIntroduction = "";
 const regionCurrencies = { US: "USD", CA: "CAD", GB: "GBP", AU: "AUD", DE: "EUR", FR: "EUR", IN: "INR", JP: "JPY" };
-const modeLabels = { sample: "Sample run", live: "Live search", ideas: "Ideas only" };
 const modeDescriptions = {
-  sample: "Illustrative gifts and prices from the demo catalog.",
-  live: "Listings from a web search. Check the retailer for changes.",
-  ideas: "Suggested gifts without a verified listing.",
+  sample: "Demo results",
+  live: "Live results · Prices can change",
+  ideas: "Unverified ideas",
 };
 const exampleBriefs = Object.values(examples);
 
+let liveReady = false;
 let report = runSample(readBrief());
 let running = false;
 let harnessMode = false;
@@ -148,9 +148,9 @@ function sortedGifts() {
 
 function render() {
   const { mode, brief, gifts, notes, checkedOn, discovery, leads = [] } = report;
-  select("mode-label").textContent = modeLabels[mode];
   select("mode-description").textContent = checkedOn
-    ? `Listings checked ${checkedOn}. Check the retailer for changes.` : modeDescriptions[mode];
+    ? `Checked ${checkedOn} · Prices can change` : modeDescriptions[mode];
+  select("results-display").hidden = mode === "sample" && !demoMode.checked && !form.hidden;
   const budget = brief.budget === null ? "" : ` · Up to ${formatMoney(brief.budget, brief.currency)} ${brief.currency}`;
   const details = [brief.recipient, brief.occasion].filter(Boolean).join(" · ");
   const resultType = mode === "live" ? (gifts.length === 1 ? "verified gift" : "verified gifts")
@@ -167,12 +167,13 @@ function render() {
   select("empty").hidden = gifts.length > 0 || leads.length > 0;
   select("empty-title").textContent = mode === "live" ? "No verified gifts" : "No matching gifts";
   select("empty-message").textContent = mode === "sample"
-    ? "Try a different interest, budget, or example brief."
-    : "Check the run notes for details, or broaden the brief and search again.";
+    ? "Try another interest or budget."
+    : "See run notes or try a broader search.";
   sort.disabled = gifts.length < 2;
   const notesList = select("run-notes");
   notesList.replaceChildren(...notes.map((note) => element("li", "", note)));
   notesList.hidden = !notes.length || (mode === "sample" && notes.length === 1 && notes[0] === examplesNote);
+  select("run-details").hidden = !discovery && notesList.hidden;
 }
 
 const examplesNote = report.notes[0];
@@ -183,14 +184,30 @@ function message(text = "") {
   banner.textContent = text;
 }
 
-function updateRegion() {
-  if (!live.checked) region.value = "US";
-  region.disabled = !live.checked;
-  select("budget-currency").textContent = regionCurrencies[region.value];
-  const showResearchTurns = harnessMode && live.checked;
+function searchesLive() {
+  return liveReady && !demoMode.checked;
+}
+
+function updateSearchButton() {
+  select("search-button").disabled = !searchesLive() && !demoMode.checked;
+  select("search-label").textContent = running ? "Searching…" : demoMode.checked ? "Find sample gifts" : "Find gifts";
+}
+
+function updateMode() {
+  const liveSearch = searchesLive();
+  select("demo-controls").hidden = !demoMode.checked;
+  select("region-field").hidden = !liveSearch;
+  region.disabled = !liveSearch;
+  select("budget-currency").textContent = regionCurrencies[liveSearch ? region.value : "US"];
+  const showResearchTurns = harnessMode && liveSearch;
   select("harness-setting").hidden = !showResearchTurns;
   select("research-setting").hidden = !showResearchTurns;
   select("research-turns").disabled = !showResearchTurns;
+  select("search-availability").hidden = liveSearch || demoMode.checked;
+  select("search-history").hidden = !historyEnabled || !liveSearch;
+  updateChatHeading();
+  updateTeamActions();
+  updateSearchButton();
 }
 
 function updateRecipient() {
@@ -200,13 +217,14 @@ function updateRecipient() {
 }
 
 function readBrief() {
+  const destination = searchesLive() ? region.selectedOptions[0] : region.options[0];
   return {
     recipient: recipientChoice.value || customRecipient.value.trim(),
     occasion: select("occasion").value,
     interests: interestsInput.value.trim(),
     budget: select("budget").valueAsNumber,
-    currency: regionCurrencies[region.value],
-    region: region.selectedOptions[0].text,
+    currency: regionCurrencies[destination.value],
+    region: destination.text,
     neededBy: select("neededBy").value || null,
     exclude: select("exclude").value.trim(),
   };
@@ -250,13 +268,18 @@ function openReport(nextReport) {
   showReport(nextReport);
 }
 
-select("new-search").addEventListener("click", () => {
+function showBriefForm() {
   if (history.state?.giftReport) history.replaceState(null, "", location.href);
   form.hidden = false;
   surprise.hidden = false;
   loadedRun = undefined;
   select("resume-run").hidden = true;
   select("report-brief").hidden = true;
+}
+
+select("new-search").addEventListener("click", () => {
+  showBriefForm();
+  render();
   select("recipient").focus();
 });
 
@@ -286,17 +309,19 @@ function setRunning(value) {
   surprise.disabled = value;
   select("import-button").disabled = value;
   updateTeamActions();
-  select("search-label").textContent = value ? "Finding and checking gifts…" : "Find gifts";
+  updateSearchButton();
   cards.setAttribute("aria-busy", String(value));
 }
 
 function updateTeamActions() {
+  demoMode.disabled = running || loadingRun;
   for (const id of ["demo-scenario", "run-demo", "replay-run"]) select(id).disabled = running;
-  select("replay-run").hidden = !lastRun?.events.length;
+  select("replay-run").hidden = demoMode.checked || !lastRun?.events.length;
   select("stop-run").hidden = !runAbort;
   savedRuns.disabled = running || loadingRun || !savedRuns.options.length;
   select("load-run").disabled = savedRuns.disabled;
-  const canResume = loadedRun && loadedRun.status !== "running" && harnessOptions.get(loadedRun.harness)?.available;
+  select("resume-run").hidden = !loadedRun || !searchesLive();
+  const canResume = searchesLive() && loadedRun && loadedRun.status !== "running" && harnessOptions.get(loadedRun.harness)?.available;
   select("continue-run").disabled = running || loadingRun || !canResume;
   select("additional-turns").disabled = running || loadingRun || !canResume;
   select("new-search").disabled = running || loadingRun;
@@ -310,6 +335,7 @@ function selectedHarness(id = harnessChoice.value) {
 
 function updateChatHeading() {
   select("chat-title").textContent = `Chat with ${selectedHarness().label}`;
+  select("chat-dock").hidden = !searchesLive() || !harnessOptions.get(harnessChoice.value)?.available;
 }
 
 function restoreTimeline(label, events, harness) {
@@ -351,7 +377,7 @@ select("load-run").addEventListener("click", async () => {
     const saved = await readHistory(liveApi(`runs/${encodeURIComponent(savedRuns.value)}`));
     openReport(saved.report);
     loadedRun = saved;
-    harnessChoice.value = saved.harness;
+    if (harnessOptions.get(saved.harness)?.available) harnessChoice.value = saved.harness;
     updateChatHeading();
     const harness = selectedHarness(saved.harness);
     restoreTimeline(`Saved ${harness.label} run`, saved.events, harness);
@@ -362,7 +388,6 @@ select("load-run").addEventListener("click", async () => {
     select("history-status").textContent = saved.status === "running" ? "This run is still active."
       : `${summary}${saved.status === "complete" ? "" : " Continue from the last completed turn."}`;
     select("additional-turns").value = "1";
-    select("resume-run").hidden = false;
     message();
   } catch (error) {
     message(error.message);
@@ -390,8 +415,8 @@ form.addEventListener("submit", async (event) => {
     message("Enter a recipient and a valid budget.");
     return;
   }
-  if (!live.checked) {
-    showSampleBrief(brief);
+  if (!searchesLive()) {
+    if (demoMode.checked) showSampleBrief(brief);
     return;
   }
   const researchTurns = select("research-turns").valueAsNumber;
@@ -466,16 +491,12 @@ select("replay-run").addEventListener("click", async () => {
 });
 
 demoChoice.replaceChildren(...demoScenarios.map(({ id, title }) => new Option(title, id)));
-function revealDemoControls() {
-  const controls = select("demo-controls");
-  controls.hidden = false;
-  select("try-demo").setAttribute("aria-expanded", "true");
-  return controls;
-}
-
-select("try-demo").addEventListener("click", () => {
-  const controls = revealDemoControls();
-  (demoChoice.disabled ? controls : demoChoice).focus();
+demoMode.addEventListener("change", () => {
+  message();
+  briefStatus.textContent = "";
+  updateMode();
+  if (!demoMode.checked && report.mode === "sample" && !form.hidden) resetTeam(teamIntroduction);
+  render();
 });
 
 demoChoice.addEventListener("change", () => {
@@ -496,7 +517,7 @@ copyDemoLink.addEventListener("click", async () => {
     await navigator.clipboard.writeText(url.href);
     copyDemoLink.textContent = "Copied";
     status.textContent = "Demo link copied.";
-    setTimeout(() => { copyDemoLink.textContent = "Copy demo link"; }, 1500);
+    setTimeout(() => { copyDemoLink.textContent = "Copy link"; }, 1500);
   } catch {
     const field = select("demo-link");
     field.value = url.href;
@@ -508,9 +529,11 @@ copyDemoLink.addEventListener("click", async () => {
 });
 
 select("run-demo").addEventListener("click", async () => {
-  if (running) return;
+  if (running || !demoMode.checked) return;
   const scenario = demoScenarios.find(({ id }) => id === demoChoice.value);
   if (!scenario) return;
+  showBriefForm();
+  fillExampleBrief(scenario.brief);
   message();
   setRunning(true);
   try {
@@ -548,8 +571,8 @@ function updateInterestSuggestions() {
 function updateBriefPreview() {
   updateInterestSuggestions();
   message();
-  briefStatus.textContent = live.checked ? "Brief ready. Select Find gifts to search." : "";
-  if (live.checked) return;
+  briefStatus.textContent = "";
+  if (!demoMode.checked) return;
   const brief = readBrief();
   if (validBrief(brief) && brief.recipient) showSampleBrief(brief);
 }
@@ -579,11 +602,7 @@ for (const button of interestSuggestions) {
 sort.addEventListener("change", render);
 recipientChoice.addEventListener("change", updateRecipient);
 interestsInput.addEventListener("input", updateInterestSuggestions);
-live.addEventListener("change", () => {
-  briefStatus.textContent = "";
-  updateRegion();
-});
-region.addEventListener("change", updateRegion);
+region.addEventListener("change", () => { select("budget-currency").textContent = regionCurrencies[region.value]; });
 select("import-button").addEventListener("click", () => file.click());
 file.addEventListener("change", async () => {
   const selected = file.files[0];
@@ -625,7 +644,7 @@ async function checkLiveAvailability() {
     const response = await fetch(liveApi("config"));
     if (!response.ok || !response.headers.get("Content-Type")?.includes("application/json")) return;
     const config = await response.json();
-    select("live-setting").hidden = config.live !== true;
+    liveReady = config.live === true;
     if (config.claude === true) {
       harnessMode = true;
       const available = config.harnesses ?? [{ id: "claude", label: "Claude Code", available: true }];
@@ -637,36 +656,29 @@ async function checkLiveAvailability() {
       }));
       const preferred = harnessOptions.get(config.defaultHarness ?? "claude");
       harnessChoice.value = preferred?.available ? preferred.id : available.find((option) => option.available)?.id ?? "";
-      live.checked = Boolean(harnessChoice.value);
-      live.disabled = !harnessChoice.value;
+      liveReady &&= Boolean(harnessChoice.value);
       select("research-turns").max = config.maxResearchTurns ?? 5;
       select("additional-turns").max = config.maxResearchTurns ?? 5;
-      updateRegion();
-      select("live-label").textContent = "Search live retailers";
       harnessChoice.addEventListener("change", updateChatHeading);
-      updateChatHeading();
       if (harnessChoice.value) enableChat({
         endpoint: liveApi("chat"), getContext: chatContext, getHarness: selectedHarness, onActivity: showTeamEvent,
       });
       historyEnabled = config.history === true;
-      select("search-history").hidden = !historyEnabled;
       void refreshHistory();
     }
-    else if (config.shopping === true) select("live-label").textContent = "Search Google Shopping";
   } catch {
     // A separate server is optional for the sample and import workflows.
   }
 }
 
 updateRecipient();
-updateRegion();
 updateInterestSuggestions();
 render();
 openInitialReport();
 const linkedDemo = demoScenarios.find(({ id }) => id === new URLSearchParams(location.search).get("demo"));
 if (linkedDemo && !form.hidden) {
+  demoMode.checked = true;
   demoChoice.value = linkedDemo.id;
   fillExampleBrief(linkedDemo.brief);
-  revealDemoControls();
 }
-const liveAvailability = checkLiveAvailability();
+const liveAvailability = checkLiveAvailability().finally(updateMode);

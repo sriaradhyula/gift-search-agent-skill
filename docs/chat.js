@@ -123,7 +123,17 @@ export function enableChat({ endpoint, getContext, getHarness, onActivity }) {
       form.requestSubmit();
     }
   });
-  jump.addEventListener("click", () => field.focus());
-  form.hidden = false;
-  jump.hidden = false;
+  jump.addEventListener("click", () => {
+    const opened = form.hidden;
+    form.hidden = !opened;
+    jump.setAttribute("aria-expanded", String(opened));
+    if (opened) field.focus({ preventScroll: true });
+  });
+  form.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !event.isComposing) {
+      form.hidden = true;
+      jump.setAttribute("aria-expanded", "false");
+      jump.focus({ preventScroll: true });
+    }
+  });
 }
