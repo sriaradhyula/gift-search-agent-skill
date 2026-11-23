@@ -1,6 +1,6 @@
 # Gift Search on Grid
 
-The hosted app runs the sample scenarios in the browser. **Multi-agent Collaboration** animates the handoffs and **Research memory** shows how the next turn uses the reviewer’s feedback. Live searches and personal harnesses run through the local launcher.
+The hosted app runs the sample scenarios in the browser. **Multi-agent Collaboration** animates the handoffs and **Research memory** shows how the next turn uses the reviewer’s feedback. Live searches can run through the local launcher or through an optional worker paired to a signed-in Grid account.
 
 ## Deploy the demo app
 
@@ -20,3 +20,9 @@ The iframe uses `/apps/gift-search` as its canonical browser URL. Grid forwards 
 After deployment, open `https://grid.outshift.io/apps/gift-search?demo=chocolate` while signed in. The link selects **Chocolate under $55**. Select **Run demo** to start playback. Use **Copy demo link** to share the current selection.
 
 The supported IDs are `chocolate`, `coffee`, `outdoors`, and `creative`. The same query links work in the standalone site and local dashboard. Links contain the sample scenario ID. Saved live runs are stored by the user’s local server.
+
+## Pair a private live test worker
+
+Run Gift Search with Claude Code in a private test pod and sign in inside the pod. Run [worker-relay.js](worker-relay.js) in that pod alongside the loopback dashboard. The relay reads a dedicated 32-byte hex-encoded token from `GIFT_GRID_RELAY_TOKEN_FILE`, and defaults to port `18001`. Use a private Service and restrict inbound access to the Grid runtime pod.
+
+Set `GIFT_GRID_LIVE_WORKER` to the relay's private HTTP origin and `GIFT_GRID_BROWSER_ORIGIN` to the Grid origin. Supply `GIFT_GRID_LIVE_TOKEN` from the deployment secret store and `GIFT_GRID_LIVE_SUBJECT` with the account's stable Grid subject. Keep the relay token and Claude credentials in the test environment. The runtime verifies the Grid app token and matches its subject on every live API request. Other signed-in visitors can run the sample scenarios.
