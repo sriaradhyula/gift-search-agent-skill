@@ -2,6 +2,7 @@ import { examples, runSample } from "./sample.js";
 
 export const demoScenarios = [
   {
+    id: "coffee",
     title: "Coffee under $75",
     brief: examples.coffee,
     turns: [
@@ -30,6 +31,7 @@ export const demoScenarios = [
     ],
   },
   {
+    id: "outdoors",
     title: "Outdoor gifts under $70",
     brief: examples.outdoors,
     turns: [
@@ -62,6 +64,7 @@ export const demoScenarios = [
     ],
   },
   {
+    id: "creative",
     title: "Creative gifts under $35",
     brief: examples.creative,
     turns: [
@@ -86,6 +89,35 @@ export const demoScenarios = [
           { names: ["Pocket watercolor set"], note: "Agreed. It’s compact and works with paper they already own." },
         ],
         review: "Shortlist the pocket watercolor set. It matches their interests and stays within $35.",
+      },
+    ],
+  },
+  {
+    id: "chocolate",
+    title: "Chocolate under $55",
+    brief: examples.chocolate,
+    turns: [
+      {
+        scouts: [
+          { name: "Bean-to-Bar Scout", persona: "Craft chocolate curator", focus: "Find a dark chocolate tasting flight." },
+          { name: "Truffle Scout", persona: "Chocolate gift specialist", focus: "Check boxed truffle assortments." },
+        ],
+        findings: [
+          { names: ["Six-bar tasting set"], note: "The six-bar set has a tasting guide, but the retailer lists it at $80." },
+          { names: ["Dark chocolate truffle assortment"], note: "The $50 assortment fits the brief, but its retailer page shows it is sold out." },
+        ],
+        review: "Neither lead works. Look for a smaller dark chocolate box that leaves room for shipping.",
+      },
+      {
+        scouts: [
+          { name: "Small Box Scout", persona: "Gift size and value researcher", focus: "Use the reviewer's feedback to check smaller assortments." },
+          { name: "Tasting Guide Scout", persona: "Guided tasting specialist", focus: "Check whether a lower-priced box still works as a tasting gift." },
+        ],
+        findings: [
+          { names: ["Dark chocolate truffle tasting box"], note: "I found the nine-piece dark chocolate box for $38. That leaves $17 for shipping." },
+          { names: ["Dark chocolate truffle tasting box"], note: "The nine-piece box includes a tasting guide, so it still fits the original brief." },
+        ],
+        review: "Shortlist the $38 tasting box. Confirm the final shipping fee and delivery date before buying.",
       },
     ],
   },

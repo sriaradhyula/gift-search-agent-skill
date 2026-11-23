@@ -177,8 +177,8 @@ fieldset { min-inline-size: 0; margin: 0; padding: 0; border: 0; }
 .team-toggle[aria-expanded="true"]::after { transform: translateY(2px) rotate(225deg); }
 .team-actions { display: flex; flex-wrap: wrap; gap: 7px; }
 .demo-controls {
-  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px;
-  max-width: 420px; margin-top: 14px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  margin-top: 14px;
 }
 .demo-controls label { color: #f4e3bc; font-size: .78rem; font-weight: 700; }
 .demo-controls select {
@@ -187,6 +187,7 @@ fieldset { min-inline-size: 0; margin: 0; padding: 0; border: 0; }
 }
 .demo-controls .secondary { min-height: 36px; padding: 5px 10px; color: #43280f; background: var(--gold); }
 .demo-controls .secondary:hover { background: #ffe8bc; }
+.demo-controls input { flex-basis: 100%; min-width: 0; padding: 8px; border: 1px solid #67806d; border-radius: 8px; }
 .team-turn { margin: 14px 0 0; color: var(--gold); font-size: .8rem; font-weight: 700; }
 .team-graph { max-width: 600px; margin: 20px auto 0; }
 .team-parallel { display: grid; grid-template-columns: repeat(var(--scout-count, 2), minmax(0, 1fr)); gap: 13px; }
@@ -295,8 +296,7 @@ fieldset { min-inline-size: 0; margin: 0; padding: 0; border: 0; }
 }
 @media (max-width: 460px) {
   .team-panel { padding: 14px; }
-  .demo-controls { grid-template-columns: minmax(0, 1fr) auto; }
-  .demo-controls label { grid-column: 1 / -1; }
+  .demo-controls label { flex-basis: 100%; }
   .team-parallel { gap: 6px; }
   .team-node { padding-inline: 5px; }
 }
@@ -600,6 +600,9 @@ dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
             <label for="demo-scenario">Offline demo</label>
             <select id="demo-scenario"></select>
             <button id="run-demo" class="secondary" type="button">Run demo</button>
+            <button id="copy-demo-link" class="secondary" type="button">Copy demo link</button>
+            <input id="demo-link" aria-label="Demo link" readonly hidden>
+            <span id="demo-link-status" class="sr-only" role="status"></span>
           </div>
           <div id="team-details">
             <p id="team-turn" class="team-turn" role="status" hidden></p>
@@ -797,6 +800,10 @@ const examples = {
     recipient: "My dad", occasion: "Just because", interests: "Outdoors, picnics",
     budget: 70, currency: "USD", region: "United States", neededBy: null, exclude: "",
   },
+  chocolate: {
+    recipient: "A friend", occasion: "Christmas", interests: "Dark chocolate, truffles",
+    budget: 55, currency: "USD", region: "United States", neededBy: null, exclude: "",
+  },
 };
 
 const catalog = [
@@ -836,9 +843,15 @@ const catalog = [
     reason: "Packs down small enough to bring along for a quick sketch outside or on a trip.",
     caveat: "Check whether watercolor paper and a brush are included.",
   },
+  {
+    name: "Dark chocolate truffle tasting box", category: "Food & drink", price: 38, hasCatalogPhoto: false,
+    tags: "dark chocolate truffles tasting flights cacao sampler", occasions: ["Christmas"],
+    reason: "Nine dark chocolate truffles and a tasting guide give your friend a few flavors to compare.",
+    caveat: "Check the shipping fee and arrival date before ordering.",
+  },
 ];
 
-const sampleImage = (name) => catalog.findIndex((gift) => gift.name === name);
+const sampleImage = (name) => catalog.findIndex((gift) => gift.name === name && gift.hasCatalogPhoto !== false);
 const words = (text) => new Set(text.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? []);
 
 function runSample(brief) {
@@ -870,6 +883,7 @@ function runSample(brief) {
 
 const demoScenarios = [
   {
+    id: "coffee",
     title: "Coffee under $75",
     brief: examples.coffee,
     turns: [
@@ -898,6 +912,7 @@ const demoScenarios = [
     ],
   },
   {
+    id: "outdoors",
     title: "Outdoor gifts under $70",
     brief: examples.outdoors,
     turns: [
@@ -930,6 +945,7 @@ const demoScenarios = [
     ],
   },
   {
+    id: "creative",
     title: "Creative gifts under $35",
     brief: examples.creative,
     turns: [
@@ -954,6 +970,35 @@ const demoScenarios = [
           { names: ["Pocket watercolor set"], note: "Agreed. It’s compact and works with paper they already own." },
         ],
         review: "Shortlist the pocket watercolor set. It matches their interests and stays within $35.",
+      },
+    ],
+  },
+  {
+    id: "chocolate",
+    title: "Chocolate under $55",
+    brief: examples.chocolate,
+    turns: [
+      {
+        scouts: [
+          { name: "Bean-to-Bar Scout", persona: "Craft chocolate curator", focus: "Find a dark chocolate tasting flight." },
+          { name: "Truffle Scout", persona: "Chocolate gift specialist", focus: "Check boxed truffle assortments." },
+        ],
+        findings: [
+          { names: ["Six-bar tasting set"], note: "The six-bar set has a tasting guide, but the retailer lists it at $80." },
+          { names: ["Dark chocolate truffle assortment"], note: "The $50 assortment fits the brief, but its retailer page shows it is sold out." },
+        ],
+        review: "Neither lead works. Look for a smaller dark chocolate box that leaves room for shipping.",
+      },
+      {
+        scouts: [
+          { name: "Small Box Scout", persona: "Gift size and value researcher", focus: "Use the reviewer's feedback to check smaller assortments." },
+          { name: "Tasting Guide Scout", persona: "Guided tasting specialist", focus: "Check whether a lower-priced box still works as a tasting gift." },
+        ],
+        findings: [
+          { names: ["Dark chocolate truffle tasting box"], note: "I found the nine-piece dark chocolate box for $38. That leaves $17 for shipping." },
+          { names: ["Dark chocolate truffle tasting box"], note: "The nine-piece box includes a tasting guide, so it still fits the original brief." },
+        ],
+        review: "Shortlist the $38 tasting box. Confirm the final shipping fee and delivery date before buying.",
       },
     ],
   },
@@ -1647,6 +1692,7 @@ const region = select("region");
 const file = select("import-file");
 const dialog = select("gift-detail");
 const demoChoice = select("demo-scenario");
+const gridMount = document.querySelector('meta[name="gift-search-mount"]')?.content;
 const reportFragment = "#report=";
 const teamIntroduction = "Follow the team from first ideas to shortlist.";
 const regionCurrencies = { US: "USD", CA: "CAD", GB: "GBP", AU: "AUD", DE: "EUR", FR: "EUR", IN: "INR", JP: "JPY" };
@@ -2088,16 +2134,52 @@ select("replay-run").addEventListener("click", async () => {
   }
 });
 
-demoChoice.replaceChildren(...demoScenarios.map(({ title }, index) => new Option(title, index)));
-select("try-demo").addEventListener("click", (event) => {
+demoChoice.replaceChildren(...demoScenarios.map(({ id, title }) => new Option(title, id)));
+function revealDemoControls() {
   const controls = select("demo-controls");
   controls.hidden = false;
-  event.currentTarget.setAttribute("aria-expanded", "true");
+  select("try-demo").setAttribute("aria-expanded", "true");
+  return controls;
+}
+
+select("try-demo").addEventListener("click", () => {
+  const controls = revealDemoControls();
   (demoChoice.disabled ? controls : demoChoice).focus();
 });
+
+demoChoice.addEventListener("change", () => {
+  select("demo-link").hidden = true;
+  select("demo-link-status").textContent = "";
+});
+
+const copyDemoLink = select("copy-demo-link");
+copyDemoLink.hidden = location.protocol === "file:";
+copyDemoLink.addEventListener("click", async () => {
+  const url = new URL(location.href);
+  if (gridMount) url.pathname = gridMount;
+  url.search = "";
+  url.hash = "";
+  url.searchParams.set("demo", demoChoice.value);
+  const status = select("demo-link-status");
+  try {
+    await navigator.clipboard.writeText(url.href);
+    copyDemoLink.textContent = "Copied";
+    status.textContent = "Demo link copied.";
+    setTimeout(() => { copyDemoLink.textContent = "Copy demo link"; }, 1500);
+  } catch {
+    const field = select("demo-link");
+    field.value = url.href;
+    field.hidden = false;
+    field.focus();
+    field.select();
+    status.textContent = "Demo link selected. Copy it with your keyboard or device menu.";
+  }
+});
+
 select("run-demo").addEventListener("click", async () => {
   if (running) return;
-  const scenario = demoScenarios[demoChoice.selectedIndex];
+  const scenario = demoScenarios.find(({ id }) => id === demoChoice.value);
+  if (!scenario) return;
   message();
   setRunning(true);
   try {
@@ -2141,9 +2223,7 @@ function updateBriefPreview() {
   if (validBrief(brief) && brief.recipient) showSampleBrief(brief);
 }
 
-surprise.addEventListener("click", () => {
-  const choices = exampleBriefs.filter((brief) => brief.interests !== interestsInput.value);
-  const { recipient, interests, budget } = choices[Math.floor(Math.random() * choices.length)];
+function fillExampleBrief({ recipient, interests, budget }) {
   recipientChoice.value = [...recipientChoice.options].some((option) => option.value === recipient) ? recipient : "";
   if (!recipientChoice.value) customRecipient.value = recipient;
   updateRecipient();
@@ -2151,6 +2231,11 @@ surprise.addEventListener("click", () => {
   interestsInput.value = interests;
   select("budget").value = budget;
   updateBriefPreview();
+}
+
+surprise.addEventListener("click", () => {
+  const choices = exampleBriefs.filter((brief) => brief.interests !== interestsInput.value);
+  fillExampleBrief(choices[Math.floor(Math.random() * choices.length)]);
 });
 
 for (const button of interestSuggestions) {
@@ -2204,7 +2289,7 @@ enableShareResults(() => ({ report, gifts: sortedGifts() }), downloadFile);
 
 async function checkLiveAvailability() {
   // A static site can omit this endpoint. An HTML fallback also leaves the demo available.
-  if (!["localhost", "127.0.0.1", "[::1]"].includes(location.hostname)) return;
+  if (gridMount || !["localhost", "127.0.0.1", "[::1]"].includes(location.hostname)) return;
   try {
     const response = await fetch("./api/config");
     if (!response.ok || !response.headers.get("Content-Type")?.includes("application/json")) return;
@@ -2245,6 +2330,12 @@ updateRegion();
 updateInterestSuggestions();
 render();
 openInitialReport();
+const linkedDemo = demoScenarios.find(({ id }) => id === new URLSearchParams(location.search).get("demo"));
+if (linkedDemo && !form.hidden) {
+  demoChoice.value = linkedDemo.id;
+  fillExampleBrief(linkedDemo.brief);
+  revealDemoControls();
+}
 const liveAvailability = checkLiveAvailability();
 </script>
 </body>

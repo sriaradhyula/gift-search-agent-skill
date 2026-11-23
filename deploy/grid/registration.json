@@ -1,0 +1,49 @@
+{
+  "agentic_apps": {
+    "packages": [
+      {
+        "package_id": "gift-search",
+        "source": "helm",
+        "manifest": {
+          "id": "gift-search",
+          "displayName": "Gift Search",
+          "description": "Watch multiple agents research gift ideas, review retailer leads, and revise a shortlist.",
+          "apiVersion": "2.0",
+          "version": "2.0.0",
+          "ui": {
+            "profiles": [{ "id": "hosted", "mode": "iframe" }],
+            "routes": [{ "id": "home", "path": "/apps/gift-search" }]
+          },
+          "api": { "mounts": [] },
+          "auth": { "mode": "app-scoped-token" },
+          "runtime": { "kind": "proxied-next-zone", "mountPath": "/apps/gift-search" },
+          "surfaces": { "showInHub": true },
+          "access": {
+            "requiredRoles": ["user"],
+            "tokenScopes": ["gift-search:read"],
+            "policyActions": [
+              { "action": "proxy:GET", "defaultEffect": "allow", "requiredScopes": ["gift-search:read"] },
+              { "action": "proxy:HEAD", "defaultEffect": "allow", "requiredScopes": ["gift-search:read"] }
+            ]
+          },
+          "provides": { "mcp": [], "agents": [], "workflows": [] },
+          "consumes": { "platformApis": [] },
+          "requestedPermissions": [],
+          "health": { "endpoint": "/healthz" }
+        }
+      }
+    ],
+    "installations": [
+      {
+        "app_id": "gift-search",
+        "package_id": "gift-search",
+        "app_version": "2.0.0",
+        "installed": true,
+        "enabled": true,
+        "visible": true,
+        "selected_ui_profile": "hosted",
+        "bindings": { "runtimeOrigin": "http://agentic-app-gift-search:8080" }
+      }
+    ]
+  }
+}

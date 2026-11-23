@@ -107,7 +107,9 @@ Start the dashboard in demo mode.
 ./runme.sh --demo
 ```
 
-Open [the local app](http://127.0.0.1:8000), select **Try a demo**, and pick a scenario to run. The coffee, outdoor, and creative gift demos each show two research turns, with scouts using the reviewer’s feedback to revise the shortlist. Read the [skill guide](http://127.0.0.1:8000/guide.html) for per-agent commands or import the [sample report](docs/examples/coffee-birthday.json).
+Open the local app, select **Try a demo**, and pick a scenario. The chocolate, coffee, outdoor, and creative gift demos each show two research turns, with scouts using the reviewer’s feedback to revise the shortlist. Select **Copy demo link** to share a scenario. [Open the local chocolate demo](http://127.0.0.1:8000/?demo=chocolate)
+
+The [skill guide](http://127.0.0.1:8000/guide.html) has per-agent commands, and you can import the [sample report](docs/examples/coffee-birthday.json) to see a saved run.
 
 For a live search in your installed agent, try this prompt.
 
@@ -124,6 +126,8 @@ The shortlist excludes products when price, stock, or the shipping destination c
 The OpenAI model defaults to `gpt-5-mini`. Set `OPENAI_GIFT_MODEL` to another reasoning model that supports web search and structured output. Set `PORT` to change the local port.
 
 The `docs/` directory is ready for GitHub Pages. In the repository’s **Settings → Pages**, select **Deploy from a branch**, then choose the branch that contains the site and the **/docs** folder. The offline demos, sample catalog, skill guide, and report import and export run in the browser without credentials. Live harnesses, chat, and history use the local server. [GitHub Pages publishing instructions](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)
+
+To host the demos in Grid’s Apps catalog, use the [Grid deployment guide](deploy/grid/README.md).
 
 After editing the dashboard, run `npm run build:dashboard` to refresh the HTML bundled with the skill.
 

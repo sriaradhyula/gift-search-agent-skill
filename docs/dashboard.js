@@ -22,6 +22,7 @@ const region = select("region");
 const file = select("import-file");
 const dialog = select("gift-detail");
 const demoChoice = select("demo-scenario");
+const gridMount = document.querySelector('meta[name="gift-search-mount"]')?.content;
 const reportFragment = "#report=";
 const teamIntroduction = "Follow the team from first ideas to shortlist.";
 const regionCurrencies = { US: "USD", CA: "CAD", GB: "GBP", AU: "AUD", DE: "EUR", FR: "EUR", IN: "INR", JP: "JPY" };
@@ -463,16 +464,52 @@ select("replay-run").addEventListener("click", async () => {
   }
 });
 
-demoChoice.replaceChildren(...demoScenarios.map(({ title }, index) => new Option(title, index)));
-select("try-demo").addEventListener("click", (event) => {
+demoChoice.replaceChildren(...demoScenarios.map(({ id, title }) => new Option(title, id)));
+function revealDemoControls() {
   const controls = select("demo-controls");
   controls.hidden = false;
-  event.currentTarget.setAttribute("aria-expanded", "true");
+  select("try-demo").setAttribute("aria-expanded", "true");
+  return controls;
+}
+
+select("try-demo").addEventListener("click", () => {
+  const controls = revealDemoControls();
   (demoChoice.disabled ? controls : demoChoice).focus();
 });
+
+demoChoice.addEventListener("change", () => {
+  select("demo-link").hidden = true;
+  select("demo-link-status").textContent = "";
+});
+
+const copyDemoLink = select("copy-demo-link");
+copyDemoLink.hidden = location.protocol === "file:";
+copyDemoLink.addEventListener("click", async () => {
+  const url = new URL(location.href);
+  if (gridMount) url.pathname = gridMount;
+  url.search = "";
+  url.hash = "";
+  url.searchParams.set("demo", demoChoice.value);
+  const status = select("demo-link-status");
+  try {
+    await navigator.clipboard.writeText(url.href);
+    copyDemoLink.textContent = "Copied";
+    status.textContent = "Demo link copied.";
+    setTimeout(() => { copyDemoLink.textContent = "Copy demo link"; }, 1500);
+  } catch {
+    const field = select("demo-link");
+    field.value = url.href;
+    field.hidden = false;
+    field.focus();
+    field.select();
+    status.textContent = "Demo link selected. Copy it with your keyboard or device menu.";
+  }
+});
+
 select("run-demo").addEventListener("click", async () => {
   if (running) return;
-  const scenario = demoScenarios[demoChoice.selectedIndex];
+  const scenario = demoScenarios.find(({ id }) => id === demoChoice.value);
+  if (!scenario) return;
   message();
   setRunning(true);
   try {
@@ -516,9 +553,7 @@ function updateBriefPreview() {
   if (validBrief(brief) && brief.recipient) showSampleBrief(brief);
 }
 
-surprise.addEventListener("click", () => {
-  const choices = exampleBriefs.filter((brief) => brief.interests !== interestsInput.value);
-  const { recipient, interests, budget } = choices[Math.floor(Math.random() * choices.length)];
+function fillExampleBrief({ recipient, interests, budget }) {
   recipientChoice.value = [...recipientChoice.options].some((option) => option.value === recipient) ? recipient : "";
   if (!recipientChoice.value) customRecipient.value = recipient;
   updateRecipient();
@@ -526,6 +561,11 @@ surprise.addEventListener("click", () => {
   interestsInput.value = interests;
   select("budget").value = budget;
   updateBriefPreview();
+}
+
+surprise.addEventListener("click", () => {
+  const choices = exampleBriefs.filter((brief) => brief.interests !== interestsInput.value);
+  fillExampleBrief(choices[Math.floor(Math.random() * choices.length)]);
 });
 
 for (const button of interestSuggestions) {
@@ -579,7 +619,7 @@ enableShareResults(() => ({ report, gifts: sortedGifts() }), downloadFile);
 
 async function checkLiveAvailability() {
   // A static site can omit this endpoint. An HTML fallback also leaves the demo available.
-  if (!["localhost", "127.0.0.1", "[::1]"].includes(location.hostname)) return;
+  if (gridMount || !["localhost", "127.0.0.1", "[::1]"].includes(location.hostname)) return;
   try {
     const response = await fetch("./api/config");
     if (!response.ok || !response.headers.get("Content-Type")?.includes("application/json")) return;
@@ -620,4 +660,10 @@ updateRegion();
 updateInterestSuggestions();
 render();
 openInitialReport();
+const linkedDemo = demoScenarios.find(({ id }) => id === new URLSearchParams(location.search).get("demo"));
+if (linkedDemo && !form.hidden) {
+  demoChoice.value = linkedDemo.id;
+  fillExampleBrief(linkedDemo.brief);
+  revealDemoControls();
+}
 const liveAvailability = checkLiveAvailability();

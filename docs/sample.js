@@ -15,6 +15,10 @@ export const examples = {
     recipient: "My dad", occasion: "Just because", interests: "Outdoors, picnics",
     budget: 70, currency: "USD", region: "United States", neededBy: null, exclude: "",
   },
+  chocolate: {
+    recipient: "A friend", occasion: "Christmas", interests: "Dark chocolate, truffles",
+    budget: 55, currency: "USD", region: "United States", neededBy: null, exclude: "",
+  },
 };
 
 const catalog = [
@@ -54,9 +58,15 @@ const catalog = [
     reason: "Packs down small enough to bring along for a quick sketch outside or on a trip.",
     caveat: "Check whether watercolor paper and a brush are included.",
   },
+  {
+    name: "Dark chocolate truffle tasting box", category: "Food & drink", price: 38, hasCatalogPhoto: false,
+    tags: "dark chocolate truffles tasting flights cacao sampler", occasions: ["Christmas"],
+    reason: "Nine dark chocolate truffles and a tasting guide give your friend a few flavors to compare.",
+    caveat: "Check the shipping fee and arrival date before ordering.",
+  },
 ];
 
-export const sampleImage = (name) => catalog.findIndex((gift) => gift.name === name);
+export const sampleImage = (name) => catalog.findIndex((gift) => gift.name === name && gift.hasCatalogPhoto !== false);
 const words = (text) => new Set(text.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? []);
 
 export function runSample(brief) {

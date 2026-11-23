@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agentic-app-gift-search
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agentic-app-gift-search
+  template:
+    metadata:
+      labels:
+        app: agentic-app-gift-search
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: gift-search
+          image: registry.example.com/gift-search:2.0.0
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: AGENTIC_APP_TOKEN_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: caipe-app-gateway
+                  key: AGENTIC_APP_TOKEN_SECRET
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: agentic-app-gift-search
+spec:
+  selector:
+    app: agentic-app-gift-search
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http

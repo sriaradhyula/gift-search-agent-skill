@@ -1,10 +1,9 @@
 import { createServer } from "node:http";
 import { spawn } from "node:child_process";
-import { readFile } from "node:fs/promises";
-import { extname } from "node:path";
 import { validBrief } from "../skills/gift-search/scripts/report.mjs";
 import { readSerpApiKey } from "../skills/gift-search/scripts/shopping.mjs";
 import { chatWithHarness, searchWithHarness } from "./claude-acp.js";
+import { readDashboardAsset } from "./dashboard-assets.js";
 import { MAX_RESEARCH_TURNS } from "./gift-team.js";
 import { availableHarnesses, harnessCommand, harnesses } from "./harnesses.js";
 import { listRuns, loadRun, newRun, runSummary, saveRun } from "./run-history.js";
@@ -24,19 +23,11 @@ const serpApiKey = liveEnabled ? await readSerpApiKey().catch((error) => {
 }) : null;
 const model = process.env.OPENAI_GIFT_MODEL || "gpt-5-mini";
 const hosts = new Set([`127.0.0.1:${port}`, `localhost:${port}`]);
-const files = new Set([
-  "index.html", "guide.html", "styles.css", "dashboard.js", "guide.js", "report.js", "sample.js", "demos.js", "team.js", "chat.js", "share.js",
-  "assets/catalog.webp", "assets/christmas-gifts.webp", "assets/markdown-it.min.js", "examples/coffee-birthday.json",
-]);
-const mime = {
-  ".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8", ".js": "text/javascript; charset=utf-8",
-  ".json": "application/json; charset=utf-8", ".webp": "image/webp",
-};
 let searching = false;
 let activeRunId = null;
 
 function sendJson(response, status, body) {
-  response.writeHead(status, { "Content-Type": mime[".json"], "Cache-Control": "no-store" });
+  response.writeHead(status, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
   response.end(JSON.stringify(body));
 }
 
@@ -280,12 +271,13 @@ const server = createServer(async (request, response) => {
     });
   }
 
-  const file = path === "/" ? "index.html" : path.slice(1);
-  if (!files.has(file) || !["GET", "HEAD"].includes(request.method)) return sendJson(response, 404, { error: "Page not found." });
+  if (!["GET", "HEAD"].includes(request.method)) return sendJson(response, 404, { error: "Page not found." });
 
   try {
-    const content = await readFile(new URL(`../docs/${file}`, import.meta.url));
-    response.writeHead(200, { "Content-Type": mime[extname(file)], "Content-Length": content.length });
+    const asset = await readDashboardAsset(path);
+    if (!asset) return sendJson(response, 404, { error: "Page not found." });
+    const { type, content } = asset;
+    response.writeHead(200, { "Content-Type": type, "Content-Length": content.length });
     response.end(request.method === "HEAD" ? null : content);
   } catch {
     sendJson(response, 500, { error: "Unable to read the requested file." });
