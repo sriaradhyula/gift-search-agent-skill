@@ -48,6 +48,20 @@ export function availableHarnesses() {
   return Object.entries(harnesses).map(([id, { label }]) => ({ id, label, available: Boolean(harnessCommand(id)) }));
 }
 
+const liteLlmVariables = [
+  "GIFT_CLAUDE_LITELLM_BASE_URL", "GIFT_CLAUDE_LITELLM_TOKEN", "GIFT_CLAUDE_LITELLM_MODEL",
+];
+const gatewayValues = liteLlmVariables.map((name) => process.env[name]?.trim());
+export const claudeUsesLiteLLM = gatewayValues.some(Boolean);
+if (claudeUsesLiteLLM) {
+  const [baseUrl, token, model] = gatewayValues;
+  const endpoint = URL.canParse(baseUrl) ? new URL(baseUrl) : null;
+  if (!token || !model || !endpoint || !["http:", "https:"].includes(endpoint.protocol) ||
+      endpoint.username || endpoint.password || endpoint.search || endpoint.hash) {
+    throw new Error("Set a valid LiteLLM URL, token, and model for the Gift Search Claude harness.");
+  }
+}
+
 function openCodeConfig(text) {
   const strings = /"(?:[^"\\]|\\[\s\S])*"|\/\*[\s\S]*?\*\/|\/\/[^\r\n]*/g;
   const unquotedTrailingCommas = /"(?:[^"\\]|\\[\s\S])*"|,(?=\s*[}\]])/g;
@@ -85,13 +99,28 @@ function isolateOpenCodeTools(env) {
 
 export function harnessEnvironment(id) {
   const env = { ...process.env };
-  for (const key of ["SERPAPI_API_KEY", "SERPAPI_API_KEY_FILE", "GIFT_HISTORY_DIR"]) delete env[key];
+  for (const key of ["SERPAPI_API_KEY", "SERPAPI_API_KEY_FILE", "GIFT_HISTORY_DIR", ...liteLlmVariables]) delete env[key];
   if (id === "claude") {
     for (const key of [
       "ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_BASE_URL", "ANTHROPIC_MODEL",
       "ANTHROPIC_DEFAULT_HAIKU_MODEL", "ANTHROPIC_DEFAULT_SONNET_MODEL", "ANTHROPIC_DEFAULT_OPUS_MODEL",
       "CLAUDE_CODE_USE_BEDROCK", "CLAUDE_CODE_USE_VERTEX", "CLAUDE_CODE_USE_FOUNDRY", "OPENAI_API_KEY",
     ]) delete env[key];
+    if (claudeUsesLiteLLM) {
+      const [baseUrl, token, model] = gatewayValues;
+      for (const key of [
+        "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN",
+        "AWS_CONTAINER_CREDENTIALS_FULL_URI", "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI",
+        "AWS_CONTAINER_AUTHORIZATION_TOKEN", "AWS_CONTAINER_AUTHORIZATION_TOKEN_FILE",
+        "AWS_ROLE_ARN", "AWS_WEB_IDENTITY_TOKEN_FILE",
+      ]) delete env[key];
+      env.ANTHROPIC_BASE_URL = baseUrl.replace(/\/+$/, "");
+      env.ANTHROPIC_AUTH_TOKEN = token;
+      env.ANTHROPIC_MODEL = model;
+      env.ANTHROPIC_DEFAULT_HAIKU_MODEL = model;
+      env.ANTHROPIC_DEFAULT_SONNET_MODEL = model;
+      env.ANTHROPIC_DEFAULT_OPUS_MODEL = model;
+    }
   }
   if (id === "codex") {
     env.INITIAL_AGENT_MODE = "read-only";

@@ -4,6 +4,19 @@ import { isIP } from "node:net";
 import { productUrl } from "../skills/gift-search/scripts/report.mjs";
 import { searchCountry } from "../skills/gift-search/scripts/shopping.mjs";
 
+const agentCoreEndpoint = process.env.GIFT_AGENTCORE_WEB_SEARCH_ENDPOINT?.trim();
+const agentCoreRegion = process.env.GIFT_AGENTCORE_WEB_SEARCH_REGION?.trim();
+export const usesAgentCoreSearch = Boolean(agentCoreEndpoint || agentCoreRegion);
+if (usesAgentCoreSearch) {
+  const endpoint = URL.canParse(agentCoreEndpoint) ? new URL(agentCoreEndpoint) : null;
+  if (!agentCoreRegion || !endpoint || endpoint.protocol !== "https:" || endpoint.port ||
+      !endpoint.hostname.endsWith(`.bedrock-agentcore.${agentCoreRegion}.vpce.amazonaws.com`) ||
+      endpoint.origin !== agentCoreEndpoint.replace(/\/$/, "")) {
+    throw new Error("Set the AgentCore Web Search region and its HTTPS interface endpoint DNS name.");
+  }
+}
+let agentCoreClient;
+
 export function retailerUrl(input) {
   const url = productUrl(input);
   const host = url?.hostname.replace(/\.$/, "");
@@ -105,6 +118,26 @@ async function fetchRetailer(input, signal) {
 }
 
 async function searchWeb(query, brief, key, signal) {
+  if (usesAgentCoreSearch) {
+    try {
+      const { BedrockAgentCoreClient, InvokeWebSearchCommand } = await import("@aws-sdk/client-bedrock-agentcore");
+      agentCoreClient ??= new BedrockAgentCoreClient({
+        region: agentCoreRegion, endpoint: agentCoreEndpoint, maxAttempts: 2,
+      });
+      const { results = [] } = await agentCoreClient.send(new InvokeWebSearchCommand({
+        webSearchId: "web-search.v1", searchQuery: [...query].slice(0, 200).join(""), maxResults: 6,
+      }), { abortSignal: AbortSignal.any([signal, AbortSignal.timeout(12_000)]) });
+      return {
+        query,
+        results: results.filter(({ url }) => retailerUrl(url)).map(({ title, url, text }) => ({
+          title: title ?? new URL(url).hostname, link: url, snippet: text.slice(0, 300),
+        })),
+      };
+    } catch {
+      if (signal.aborted) signal.throwIfAborted();
+      return { query, error: "AgentCore Web Search was unavailable." };
+    }
+  }
   if (!key) return { query, error: "Google web search requires the local SerpApi key." };
   const url = new URL("https://serpapi.com/search");
   const country = searchCountry(brief.region)?.toLowerCase();
@@ -131,7 +164,7 @@ export async function collectRetailerEvidence(lookups, { brief, key, signal, act
   return Promise.all(requests.map(async (input) => {
     const url = retailerUrl(input);
     const isPage = Boolean(url) || /^https?:\/\//i.test(input);
-    const tool = isPage ? "Retailer page" : "Web search";
+    const tool = isPage ? "Retailer page" : usesAgentCoreSearch ? "AgentCore Web Search" : "Web search";
     const detail = url ? url.hostname + url.pathname : input.slice(0, 200);
     activity({ kind: "claude-tool", tool, detail: detail.slice(0, 200), status: "pending" });
     const evidence = isPage ? await fetchRetailer(input, signal) : await searchWeb(input.slice(0, 220), brief, key, signal);

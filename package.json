@@ -12,5 +12,8 @@
   },
   "engines": {
     "node": ">=22.20"
+  },
+  "dependencies": {
+    "@aws-sdk/client-bedrock-agentcore": "3.1176.0"
   }
 }

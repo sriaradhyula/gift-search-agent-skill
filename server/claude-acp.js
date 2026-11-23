@@ -8,10 +8,19 @@ import { productUrl } from "../skills/gift-search/scripts/report.mjs";
 import { discoverShopping } from "../skills/gift-search/scripts/shopping.mjs";
 import { runGiftTeam } from "./gift-team.js";
 import { listingKey, liveReport } from "./search.js";
-import { harnessCommand, harnessEnvironment, harnesses } from "./harnesses.js";
-import { collectRetailerEvidence } from "./retailer-evidence.js";
+import { claudeUsesLiteLLM, harnessCommand, harnessEnvironment, harnesses } from "./harnesses.js";
+import { collectRetailerEvidence, usesAgentCoreSearch } from "./retailer-evidence.js";
 
 const skillPath = new URL("../skills/gift-search/SKILL.md", import.meta.url);
+const budgetSetting = process.env.GIFT_CLAUDE_SESSION_BUDGET_USD?.trim();
+const maxBudgetUsd = budgetSetting ? Number(budgetSetting) : undefined;
+if (maxBudgetUsd !== undefined && (!Number.isFinite(maxBudgetUsd) || maxBudgetUsd <= 0)) {
+  throw new Error("GIFT_CLAUDE_SESSION_BUDGET_USD must be a positive dollar amount.");
+}
+
+function hasNativeWebTools(harness) {
+  return harness === "claude" && !claudeUsesLiteLLM && !usesAgentCoreSearch;
+}
 
 function fetchable(value) {
   const url = productUrl(value);
@@ -37,7 +46,7 @@ async function harnessTurn(harness, prompt, cwd, signal, requestedTools, { activ
   if (!launch) throw new Error(`${label} is unavailable. Install its local CLI and try again.`);
   const [command, ...args] = launch;
   const env = harnessEnvironment(harness);
-  const tools = harness === "claude" ? requestedTools : [];
+  const tools = hasNativeWebTools(harness) ? requestedTools : [];
   const child = spawn(command, args, {
     cwd, env, signal, stdio: ["pipe", "pipe", "ignore"], windowsHide: true, detached: process.platform !== "win32",
   });
@@ -123,7 +132,10 @@ async function harnessTurn(harness, prompt, cwd, signal, requestedTools, { activ
     if (initialized.protocolVersion !== 1) throw new Error(`${label} did not negotiate ACP v1.`);
     const session = await request("session/new", {
       cwd, mcpServers: [],
-      ...(harness === "claude" && { _meta: { claudeCode: { options: { tools, settingSources: [], strictMcpConfig: true, persistSession: false } } } }),
+      ...(harness === "claude" && { _meta: { claudeCode: { options: {
+        tools, settingSources: [], strictMcpConfig: true, persistSession: false,
+        ...(maxBudgetUsd !== undefined && { maxBudgetUsd }),
+      } } } }),
     });
     activeSession = session.sessionId;
     if (mode && session.modes?.currentModeId !== mode && session.modes?.availableModes?.some(({ id }) => id === mode)) {
@@ -298,7 +310,7 @@ export async function searchWithHarness(brief, {
             candidates: candidates.map(({ imageUrl, ...candidate }) => candidate),
           },
           required: ["gifts"], tools: ["WebSearch", "WebFetch"], cwd, signal: deadline(180_000), key: serpApiKey, writeHighlight,
-          initialLookups: harness === "claude" ? [] : candidates.map(({ url }) => url).filter(Boolean).slice(0, 6),
+          initialLookups: hasNativeWebTools(harness) ? [] : candidates.map(({ url }) => url).filter(Boolean).slice(0, 6),
           activity: (event) => onEvent({ ...event, role: role.name, roleId: role.id, turn }),
         });
         const { gifts, rejected, notes } = response;

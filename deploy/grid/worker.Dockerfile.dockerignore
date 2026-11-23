@@ -1,0 +1,15 @@
+**
+!LICENSE
+!NOTICE
+!package.json
+!package-lock.json
+!server/
+!server/**
+!skills/
+!skills/**
+!docs/
+!docs/**
+!deploy/
+!deploy/grid/
+!deploy/grid/live-proxy.js
+!deploy/grid/worker-relay.js

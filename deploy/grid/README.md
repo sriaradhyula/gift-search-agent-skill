@@ -26,3 +26,18 @@ The supported IDs are `chocolate`, `coffee`, `outdoors`, and `creative`. The sam
 Run Gift Search with Claude Code in a private test pod and sign in inside the pod. Run [worker-relay.js](worker-relay.js) in that pod alongside the loopback dashboard. The relay reads a dedicated 32-byte hex-encoded token from `GIFT_GRID_RELAY_TOKEN_FILE`, and defaults to port `18001`. Use a private Service and restrict inbound access to the Grid runtime pod.
 
 Set `GIFT_GRID_LIVE_WORKER` to the relay's private HTTP origin and `GIFT_GRID_BROWSER_ORIGIN` to the Grid origin. Supply `GIFT_GRID_LIVE_TOKEN` from the deployment secret store and `GIFT_GRID_LIVE_SUBJECT` with the account's stable Grid subject. Keep the relay token and Claude credentials in the test environment. The runtime verifies the Grid app token and matches its subject on every live API request. Other signed-in visitors can run the sample scenarios.
+
+## Run a managed Claude Code worker
+
+Install the server dependencies with `npm ci`. Configure the worker with the following environment variables.
+
+| Variable | Value |
+| --- | --- |
+| `GIFT_CLAUDE_LITELLM_BASE_URL` | Private LiteLLM gateway origin |
+| `GIFT_CLAUDE_LITELLM_MODEL` | Claude model alias backed by Bedrock |
+| `GIFT_CLAUDE_LITELLM_TOKEN` | Dedicated, budgeted virtual key supplied from the secret store |
+| `GIFT_CLAUDE_SESSION_BUDGET_USD` | Estimated per-session cap, such as `1` |
+| `GIFT_AGENTCORE_WEB_SEARCH_REGION` | AWS Region of the AgentCore endpoint |
+| `GIFT_AGENTCORE_WEB_SEARCH_ENDPOINT` | HTTPS DNS name of the AgentCore interface VPC endpoint |
+
+Give the worker an AWS workload identity with `bedrock-agentcore:InvokeWebSearch` permission on `arn:aws:bedrock-agentcore:<region>:aws:tool/web-search.v1`. The private endpoint carries text searches from the server. Exact retailer pages still use the server's public HTTPS fetcher, and optional SerpApi Google Shopping results still count as leads. The LiteLLM virtual key budget covers model calls. AgentCore search has separate AWS billing.
