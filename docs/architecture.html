@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="See how Gift Search creates research agents, coordinates handoffs, and uses shared memory to refine a shortlist.">
+  <meta name="theme-color" content="#fbfaf6">
+  <title>Architecture · Gift Search</title>
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./site.css">
+</head>
+<body class="docs-site">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="brand" href="https://sriaradhyula.github.io/gift-search-agent-skill/">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11h16v9H4zM3 7h18v4H3zM12 7v13M12 7C7 7 6 5 7.5 3.7 9 2.4 11 4 12 7Zm0 0c5 0 6-2 4.5-3.3C15 2.4 13 4 12 7Z"/></svg>
+        </span>
+        Gift Search
+      </a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a href="https://sriaradhyula.github.io/gift-search-agent-skill/">Install</a>
+        <a href="./guide.html">Setup</a>
+        <a href="./architecture.html" aria-current="page">Architecture</a>
+      </nav>
+      <a class="repo-link" href="https://github.com/sriaradhyula/gift-search-agent-skill">GitHub <span aria-hidden="true">↗</span></a>
+    </div>
+  </header>
+  <main class="architecture-main" id="main">
+    <div class="architecture-intro">
+      <h1>How the agents collaborate</h1>
+      <p class="docs-lead">Gift Search turns a brief into a shortlist through parallel research, retailer verification, and a shared record of what the team learned.</p>
+    </div>
+
+    <section class="architecture-flow" aria-labelledby="turn-heading">
+      <div class="flow-heading">
+        <h2 id="turn-heading">A research turn</h2>
+        <span>Recipient · Occasion · Budget · Destination</span>
+      </div>
+      <ol class="flow-steps">
+        <li>
+          <h3>Planner</h3>
+          <p>Uses the brief and shared memory to assign two or three scouts with distinct specialties.</p>
+        </li>
+        <li>
+          <h3>Scouts in parallel</h3>
+          <p>Search different angles, propose product links, and post highlights as they work.</p>
+        </li>
+        <li>
+          <h3>Retailer reviewer</h3>
+          <p>Checks the exact item, price, stock, and delivery coverage before it makes the shortlist.</p>
+        </li>
+      </ol>
+      <div class="flow-memory">
+        <h3>Shared research memory</h3>
+        <p>The next turn reads the leads, review decisions, and open questions. It creates new scouts and keeps the same reviewer.</p>
+      </div>
+    </section>
+
+    <div class="architecture-content">
+      <aside aria-label="On this page">
+        <nav class="contents-nav" aria-label="On this page">
+          <a href="#skill-and-dashboard">Skill and dashboard</a>
+          <a href="#search-and-verification">Search and verification</a>
+          <a href="#memory-and-history">Memory and history</a>
+        </nav>
+      </aside>
+      <div class="architecture-sections">
+        <section id="skill-and-dashboard" aria-labelledby="entry-heading">
+          <h2 id="entry-heading">One skill, two ways to run it</h2>
+          <p>Install the skill in your agent and give it a brief. The host can delegate to scouts when it supports subagents, or run the research in separate passes.</p>
+          <p>In the dashboard, the server uses the same skill instructions and coordinates a planner, separate scout sessions, and a reviewer through the Agent Client Protocol (ACP). Pick Claude Code, Codex, Cursor, OpenCode, or CAIPE with <strong>Run with</strong>.</p>
+          <a class="architecture-link" href="./guide.html#live">Set up a local run <span aria-hidden="true">→</span></a>
+        </section>
+
+        <section id="search-and-verification" aria-labelledby="search-heading">
+          <h2 id="search-heading">Discovery and verification</h2>
+          <p>Claude Code can use web search. An optional SerpApi key adds Google Shopping leads. A managed worker can use Claude through LiteLLM and AgentCore Web Search over AWS PrivateLink.</p>
+          <p>The reviewer opens retailer pages and shipping policies to check the price, stock, and destination. The shortlist includes known shipping costs in the budget. Open <strong>Research leads</strong> to see why other items were left out.</p>
+          <a class="architecture-link" href="https://github.com/sriaradhyula/gift-search-agent-skill/blob/main/docs/local-options.md#search-providers">Search provider options <span aria-hidden="true">↗</span></a>
+        </section>
+
+        <section id="memory-and-history" aria-labelledby="memory-heading">
+          <h2 id="memory-heading">Live memory and resumable runs</h2>
+          <p>Scouts start each turn with the same memory snapshot. Their new posts stream to <strong>Research memory</strong> and go to the reviewer. The next turn’s planner uses those posts and review decisions to choose new assignments.</p>
+          <p>In the chocolate demo, the reviewer flags a sold-out $50 assortment. The next scouts look for a smaller box and find a $38 option with room in the budget for shipping.</p>
+          <p>Choose one to five turns per run. The dashboard saves a checkpoint after each completed turn, so <strong>Continue search</strong> can reuse the brief, shortlist, and prior research. Download <code>memory.md</code> to keep the notes.</p>
+          <a class="architecture-link" href="./dashboard.html?demo=chocolate">Watch the two-turn chocolate demo <span aria-hidden="true">→</span></a>
+        </section>
+      </div>
+    </div>
+  </main>
+  <footer class="docs-footer">
+    <div class="shell">
+      <span>Gift Search</span>
+      <a href="https://outshift.cisco.com/blog/ai-ml/ai-holiday-shopper-multi-agent-gift-finder">Original Outshift project</a>
+    </div>
+  </footer>
+</body>
+</html>
