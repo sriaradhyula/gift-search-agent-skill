@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "mode": "sample",
+  "brief": {
+    "recipient": "My sister",
+    "occasion": "Birthday",
+    "interests": "Coffee, slow mornings",
+    "budget": 75,
+    "currency": "USD",
+    "region": "United States",
+    "neededBy": null,
+    "exclude": ""
+  },
+  "checkedOn": null,
+  "gifts": [
+    {
+      "name": "Pour-over coffee set",
+      "category": "Coffee",
+      "price": 48,
+      "reason": "A hands-on brewing ritual for someone who likes to take their time with the first cup.",
+      "caveat": "Check whether the set includes paper filters in the right size.",
+      "merchant": null,
+      "url": null
+    },
+    {
+      "name": "Insulated travel mug",
+      "category": "Everyday",
+      "price": 34,
+      "reason": "Keeps their favorite coffee warm on the commute or a long morning walk.",
+      "caveat": "Check whether the lid seals fully if they carry it in a bag.",
+      "merchant": null,
+      "url": null
+    },
+    {
+      "name": "Specialty coffee tasting flight",
+      "category": "Food & drink",
+      "price": 29,
+      "reason": "A few small roasts give them an easy way to try different beans and find a favorite.",
+      "caveat": "Choose whole bean or ground to match how they brew.",
+      "merchant": null,
+      "url": null
+    }
+  ],
+  "notes": [
+    "Illustrative products and prices from the sample catalog."
+  ]
+}

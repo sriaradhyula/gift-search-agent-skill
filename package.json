@@ -1,0 +1,15 @@
+{
+  "name": "gift-search-agent-skill",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server/index.js --claude-acp",
+    "start:claude": "node server/index.js --claude-acp",
+    "start:openai": "node server/index.js",
+    "build:dashboard": "node scripts/build-dashboard.mjs"
+  },
+  "engines": {
+    "node": ">=22.20"
+  }
+}

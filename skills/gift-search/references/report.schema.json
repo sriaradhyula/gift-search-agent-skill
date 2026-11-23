@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Gift Search report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "mode", "brief", "checkedOn", "gifts", "notes"],
+  "if": { "properties": { "mode": { "const": "live" } } },
+  "then": {
+    "properties": {
+      "checkedOn": { "type": "string" },
+      "gifts": {
+        "items": {
+          "properties": {
+            "merchant": { "type": "string", "minLength": 1 },
+            "url": { "type": "string" }
+          }
+        }
+      }
+    }
+  },
+  "properties": {
+    "version": { "const": 1 },
+    "mode": { "enum": ["sample", "live", "ideas"] },
+    "brief": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["recipient", "occasion", "interests", "budget", "currency", "region", "neededBy", "exclude"],
+      "properties": {
+        "recipient": { "type": "string" },
+        "occasion": { "type": "string" },
+        "interests": { "type": "string" },
+        "budget": { "type": ["number", "null"], "minimum": 0 },
+        "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+        "region": { "type": "string" },
+        "neededBy": { "type": ["string", "null"], "format": "date" },
+        "exclude": { "type": "string" }
+      }
+    },
+    "checkedOn": { "type": ["string", "null"], "format": "date" },
+    "gifts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "category", "price", "merchant", "url", "reason", "caveat"],
+        "properties": {
+          "name": { "type": "string" },
+          "category": { "type": "string" },
+          "price": { "type": ["number", "null"], "minimum": 0 },
+          "merchant": { "type": ["string", "null"] },
+          "url": { "type": ["string", "null"], "format": "uri", "pattern": "^https://" },
+          "imageUrl": { "type": "string", "format": "uri", "pattern": "^https://encrypted-tbn[0-9]*\\.gstatic\\.com/" },
+          "reason": { "type": "string" },
+          "caveat": { "type": "string" }
+        }
+      }
+    },
+    "discovery": { "type": "string" },
+    "leads": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "merchant", "url", "fromShopping", "review"],
+        "if": { "required": ["listedPrice"] },
+        "then": { "properties": { "fromShopping": { "const": true } } },
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "merchant": { "type": ["string", "null"] },
+          "url": { "type": ["string", "null"], "format": "uri", "pattern": "^https://" },
+          "fromShopping": { "type": "boolean" },
+          "listedPrice": { "type": "string" },
+          "imageUrl": { "type": "string", "format": "uri", "pattern": "^https://encrypted-tbn[0-9]*\\.gstatic\\.com/" },
+          "review": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "notes": { "type": "array", "items": { "type": "string" } }
+  }
+}
