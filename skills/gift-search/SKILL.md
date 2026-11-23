@@ -6,7 +6,7 @@ license: Apache-2.0
 
 # Gift Search
 
-Turn a gift brief into a ranked shortlist. Use current shopping or web tools for live recommendations. Only collect details that change the result.
+Turn a gift brief into a ranked shortlist and open it in a browser dashboard. Use current shopping or web tools for live recommendations. Only collect details that change the result.
 
 If the user supplies a gift report and wants to see it in the dashboard, skip to Dashboard handoff.
 
@@ -26,4 +26,6 @@ When prices, availability, or regional fit cannot be checked, qualify the claim.
 
 ## Dashboard handoff
 
-For a dashboard request, write a report using [the report format](references/report-format.md) and [JSON schema](references/report.schema.json), then run the [dashboard launcher](references/dashboard.md). For JSON export only, return the report path. For a regular gift search, present the handoff and shortlist in chat.
+After every completed gift search, including idea-only searches and searches with no qualifying gifts, write a report using [the report format](references/report-format.md) and [JSON schema](references/report.schema.json). Run the [dashboard launcher](references/dashboard.md) before replying so it creates the HTML and attempts to open it. Include a clickable Markdown link to the returned HTML path and a short summary in your reply, even when the browser cannot open.
+
+Honor an explicit request for chat-only results or JSON-only export. When acting as an assigned planner, scout, or reviewer inside an existing dashboard run, return the role’s requested output to the coordinator, which displays the results in that dashboard.
