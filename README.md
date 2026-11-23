@@ -32,6 +32,8 @@ Start a new session and ask your agent to use the skill.
 
 > Find a Christmas gift under $55 for a friend who loves dark chocolate. It needs to ship to the United States.
 
+The skill creates an HTML dashboard after each search, tries to open it in your browser, and gives you the link.
+
 ## How the agents collaborate
 
 1. A planner creates scouts with different specialties for each research turn.

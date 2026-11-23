@@ -16,12 +16,12 @@ Replace the example with the actual brief. The helper accepts a JSON file path i
 
 ## Open a report
 
-Save the results to `gift-report.json`, or choose a new filename if that path already holds a different run. From the user's project, run:
+Use the supplied report if there is one. Otherwise, save the results to `gift-report.json` or choose a new filename if that path already holds a different run. From the user's project, run the launcher before your final reply.
 
 ```sh
 node "/path/to/gift-search/scripts/open-dashboard.mjs" "./gift-report.json"
 ```
 
-The launcher writes a self-contained HTML dashboard next to the JSON report and opens it in the default browser. Give the user the returned HTML path. In a remote or headless session, use `--no-open` and return the generated file.
+The launcher writes a self-contained HTML dashboard next to the JSON report and tries to open it in the default browser. Return the printed absolute path as a clickable Markdown link, such as `[Open the gift dashboard](/absolute/path/gift-dashboard.html)`. Use `--no-open` when the session is headless or the user asks to skip opening the browser.
 
-If the user names a running Gift Search dashboard, pass its URL with `--dashboard-url`, for example `--dashboard-url http://127.0.0.1:8000`. The dashboard loads the report from the URL fragment in the browser. Only pass a trusted dashboard URL the user asked to use.
+If the user names a running Gift Search dashboard, first generate the local HTML with `--no-open` so you have its link. Then run the launcher with `--dashboard-url` and the requested URL, for example `--dashboard-url http://127.0.0.1:8000`. The running dashboard loads the report from the URL fragment. Use a trusted dashboard URL the user asked to use.
