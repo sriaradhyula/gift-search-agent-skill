@@ -2,10 +2,10 @@ name: Gift Search Grid image
 
 on:
   push:
-    branches: [main, codex/grid-gift-search]
-    paths: [.github/workflows/grid-image.yml, deploy/grid/**, docs/**, server/dashboard-assets.js, package.json, LICENSE, NOTICE]
+    branches: [main, 'codex/grid-gift-search*']
+    paths: [.github/workflows/grid-image.yml, deploy/grid/**, docs/**, server/**, skills/**, package*.json, LICENSE, NOTICE]
   pull_request:
-    paths: [.github/workflows/grid-image.yml, deploy/grid/**, docs/**, server/dashboard-assets.js, package.json, LICENSE, NOTICE]
+    paths: [.github/workflows/grid-image.yml, deploy/grid/**, docs/**, server/**, skills/**, package*.json, LICENSE, NOTICE]
   workflow_dispatch:
 
 permissions:
@@ -20,6 +20,7 @@ jobs:
         with:
           node-version: "24"
       - run: npm ci --prefix deploy/grid --ignore-scripts
+      - run: npm ci --ignore-scripts
       - run: node --test deploy/grid/server.test.js
       - run: npm run build:dashboard && git diff --exit-code
   publish:
@@ -60,3 +61,26 @@ jobs:
         with:
           name: gift-search-grid-image
           path: image.txt
+      - uses: docker/build-push-action@v6
+        id: worker
+        with:
+          context: .
+          file: deploy/grid/worker.Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ghcr.io/${{ github.repository }}:worker-sha-${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.title=Gift Search worker
+      - name: Record the immutable worker image reference
+        env:
+          REPO: ${{ github.repository }}
+          DIGEST: ${{ steps.worker.outputs.digest }}
+        run: |
+          printf '%s\n' "ghcr.io/${REPO}@${DIGEST}" > worker-image.txt
+          cat worker-image.txt >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gift-search-grid-worker-image
+          path: worker-image.txt
