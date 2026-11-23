@@ -4,7 +4,7 @@ Find gifts with your own Claude Code and watch a team of agents research, compar
 
 ## Try it
 
-**[Try the chocolate demo](https://sriaradhyula.github.io/gift-search-agent-skill/?demo=chocolate)**. In the browser, select **Run demo** to watch two rounds of research. No account or API key required.
+**[Try the chocolate demo](https://sriaradhyula.github.io/gift-search-agent-skill/dashboard.html?demo=chocolate)**. In the browser, select **Run demo** to watch two rounds of research. No account or API key required.
 
 ## Run a live search
 
@@ -40,4 +40,4 @@ Start a new session and ask your agent to use the skill.
 
 Watch the handoffs in **Multi-agent Collaboration** and resume a previous search from **Search history**.
 
-[Step-by-step guide](https://sriaradhyula.github.io/gift-search-agent-skill/guide.html) · [Original Outshift walkthrough](https://outshift.cisco.com/blog/ai-ml/ai-holiday-shopper-multi-agent-gift-finder) · [Apache 2.0 license](LICENSE)
+[Documentation](https://sriaradhyula.github.io/gift-search-agent-skill/) · [Architecture](https://sriaradhyula.github.io/gift-search-agent-skill/architecture.html) · [Original Outshift walkthrough](https://outshift.cisco.com/blog/ai-ml/ai-holiday-shopper-multi-agent-gift-finder) · [Apache 2.0 license](LICENSE)
