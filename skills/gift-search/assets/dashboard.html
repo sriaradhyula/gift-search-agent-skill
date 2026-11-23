@@ -2289,7 +2289,7 @@ enableShareResults(() => ({ report, gifts: sortedGifts() }), downloadFile);
 
 async function checkLiveAvailability() {
   // A static site can omit this endpoint. An HTML fallback also leaves the demo available.
-  if (gridMount || !["localhost", "127.0.0.1", "[::1]"].includes(location.hostname)) return;
+  if (!gridMount && !["localhost", "127.0.0.1", "[::1]"].includes(location.hostname)) return;
   try {
     const response = await fetch("./api/config");
     if (!response.ok || !response.headers.get("Content-Type")?.includes("application/json")) return;

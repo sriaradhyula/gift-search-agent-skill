@@ -20,10 +20,12 @@
           "surfaces": { "showInHub": true },
           "access": {
             "requiredRoles": ["user"],
-            "tokenScopes": ["gift-search:read"],
+            "tokenScopes": ["gift-search:read", "gift-search:live"],
             "policyActions": [
               { "action": "proxy:GET", "defaultEffect": "allow", "requiredScopes": ["gift-search:read"] },
-              { "action": "proxy:HEAD", "defaultEffect": "allow", "requiredScopes": ["gift-search:read"] }
+              { "action": "proxy:HEAD", "defaultEffect": "allow", "requiredScopes": ["gift-search:read"] },
+              { "action": "gift-search-run", "method": "POST", "path": "/api/search", "defaultEffect": "allow", "requiredScopes": ["gift-search:live"] },
+              { "action": "gift-search-chat", "method": "POST", "path": "/api/chat", "defaultEffect": "allow", "requiredScopes": ["gift-search:live"] }
             ]
           },
           "provides": { "mcp": [], "agents": [], "workflows": [] },
