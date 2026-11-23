@@ -4,8 +4,8 @@ An installable skill and a live demo of how agents collaborate on a gift search.
 
 ## Quick start
 
-1. Install Node.js 22.20 or later with npm. Run the steps below in a terminal on macOS or Linux, or in WSL on Windows. [Download Node.js](https://nodejs.org/en/download)
-2. Clone the repository with Git and start the demo. You can also download the repository as a ZIP, unzip it, and run the last command from that folder.
+1. Install Node.js 22.20 or later with npm. [Download Node.js](https://nodejs.org/en/download)
+2. Clone the repository and start the app in a terminal on macOS, Linux, or WSL. If you already have a copy, run the last line from its folder.
 
    ```sh
    git clone https://github.com/sriaradhyula/gift-search-agent-skill.git
@@ -13,15 +13,17 @@ An installable skill and a live demo of how agents collaborate on a gift search.
    ./runme.sh --demo
    ```
 
-3. In the browser, select **Try a demo**, choose a scenario, and select **Run demo**. If the browser stays closed, open the address printed in the terminal.
+3. In the dashboard, select **Try a demo**, pick a scenario, and select **Run demo**.
 
-### Run your first live search
+If the browser stays closed, open the address printed in the terminal. Press **Ctrl+C** to stop the app.
 
-1. Stop the demo with **Ctrl+C**. For the default harness, install Claude Code and run `claude auth login`. If you prefer another harness, use its CLI setup below. [Claude Code setup](https://code.claude.com/docs/en/setup)
-2. For Google Shopping discovery, save your SerpApi key as the only text in `~/.config/serpapi.txt`. Create the `~/.config` folder if needed. The launcher also supports an existing `SERPAPI_API_KEY` or `SERPAPI_API_KEY_FILE`. Claude Code can search with its web tools when a SerpApi key is unavailable. [Manage your SerpApi key](https://serpapi.com/manage-api-key)
-3. Run `./runme.sh`, choose a harness under **Run with**, set the number of research turns, and select **Find gifts**. Use **Search history → Load run → Continue search** to add turns to a saved run.
+### Run a live search
 
-The launcher serves the dashboard at `http://127.0.0.1:8000`. If that port is busy, try `./runme.sh --port 8001`. Use `--no-open` to keep browser launch manual. Press **Ctrl+C** to stop the server.
+1. Install Claude Code and sign in with `claude auth login`. [Claude Code setup](https://code.claude.com/docs/en/setup)
+2. Stop the demo with **Ctrl+C** and run `./runme.sh`.
+3. Fill in the gift brief and select **Find gifts**.
+
+Claude Code can search the web. To add Google Shopping results, save your SerpApi key in `~/.config/serpapi.txt`. [Manage your SerpApi key](https://serpapi.com/manage-api-key)
 
 ## Install
 
@@ -70,6 +72,8 @@ Sign in to the CLI you want to use, then run the launcher from the checkout.
 ```
 
 Open [the local app](http://127.0.0.1:8000). **Run with** defaults to Claude Code and also offers Codex, Cursor, OpenCode, and CAIPE. Choose 1–5 **Research turns**, then select **Find gifts**. Clear **Search live retailers** to use the sample catalog. The local server gives the repo’s `SKILL.md` to each planner, scout, and reviewer in its own ACP session.
+
+If port 8000 is busy, run `./runme.sh --port 8001`. Use `--no-open` to open the address manually, or `--help` to see the launcher options.
 
 | Harness | Local setup |
 | --- | --- |

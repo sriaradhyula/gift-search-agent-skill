@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Install Gift Search for Claude Code, Codex, Gemini CLI, OpenCode, and Cursor.">
+  <meta name="description" content="Try a Gift Search demo, start the local dashboard, or install the gift-search skill.">
   <meta name="theme-color" content="#f8f8f3">
   <title>Gift Search · Skill guide</title>
   <link rel="stylesheet" href="./styles.css">
@@ -26,38 +26,39 @@
     <nav class="guide-nav" aria-label="On this page">
       <strong>On this page</strong>
       <a href="#setup">Quick start</a>
+      <a href="#live">Live search</a>
       <a href="#install">Install the skill</a>
-      <a href="#claude">Open from Claude Code</a>
       <a href="#example">Example run</a>
-      <a href="#live">Live dashboard</a>
-      <a href="#workflow">How it works</a>
-      <a href="#update">Update the skill</a>
     </nav>
     <article class="guide-content">
-      <h1>Gift Search skill</h1>
-      <p>Give your agent a gift brief and get a ranked shortlist with reasons, prices, and retailer links when available.</p>
+      <h1>Set up Gift Search</h1>
+      <p><a href="./index.html">Open the dashboard</a> and select <strong>Try a demo</strong> to watch the agents work. The browser demos run without an account or API key.</p>
       <section id="setup">
         <h2>Quick start</h2>
         <ol>
-          <li>Install Node.js 22.20 or later with npm. Use a terminal on macOS, Linux, or WSL. <a href="https://nodejs.org/en/download">Download Node.js</a></li>
-          <li>Clone the repository with Git and start the demo. You can also download it as a ZIP, unzip it, and run the last command from that folder.
+          <li><a href="https://nodejs.org/en/download">Install Node.js 22.20 or later</a> with npm.</li>
+          <li>Clone the repository and start the app in a terminal on macOS, Linux, or WSL. If you already have a copy, run the last line from its folder.
             <div class="code-block"><pre><code id="runme-command">git clone https://github.com/sriaradhyula/gift-search-agent-skill.git
 cd gift-search-agent-skill
 ./runme.sh --demo</code></pre><button type="button" class="copy" data-copy="runme-command">Copy</button></div>
           </li>
-          <li>Select <strong>Try a demo</strong>, choose a scenario, and select <strong>Run demo</strong>. If the browser stays closed, open the address printed in the terminal.</li>
+          <li>In the dashboard, select <strong>Try a demo</strong>, pick a scenario, and select <strong>Run demo</strong>.</li>
         </ol>
-        <h3>Switch to live search</h3>
+        <p>If the browser stays closed, open the address printed in the terminal. Press <strong>Ctrl+C</strong> to stop the app.</p>
+      </section>
+      <section id="live">
+        <h2>Run a live search</h2>
         <ol>
-          <li>Stop the demo with <strong>Ctrl+C</strong>. For the default harness, install Claude Code and run <code>claude auth login</code>. <a href="https://code.claude.com/docs/en/setup">Claude Code setup</a></li>
-          <li>For Google Shopping discovery, save your SerpApi key as the only text in <code>~/.config/serpapi.txt</code>. Create the folder if needed. Claude Code can use its web tools when a SerpApi key is unavailable. <a href="https://serpapi.com/manage-api-key">Manage your SerpApi key</a></li>
-          <li>Run <code>./runme.sh</code>, choose your harness under <strong>Run with</strong>, and select <strong>Find gifts</strong>.</li>
+          <li><a href="https://code.claude.com/docs/en/setup">Install Claude Code</a> and sign in with <code>claude auth login</code>.</li>
+          <li>Stop the demo with <strong>Ctrl+C</strong> and run <code>./runme.sh</code>.</li>
+          <li>Fill in the gift brief and select <strong>Find gifts</strong>.</li>
         </ol>
-        <p>If port 8000 is busy, run <code>./runme.sh --port 8001</code>. Use <code>--no-open</code> to open the address manually and <code>--help</code> to see all options.</p>
+        <p>Claude Code can search the web. To add Google Shopping results, save your <a href="https://serpapi.com/manage-api-key">SerpApi key</a> in <code>~/.config/serpapi.txt</code>.</p>
+        <p>Use <strong>Run with</strong> to switch agents. <a href="https://github.com/sriaradhyula/gift-search-agent-skill#run-with-a-local-harness">Setup for Codex, Cursor, OpenCode, and CAIPE</a></p>
       </section>
       <section id="install">
         <h2>Install the skill</h2>
-        <p>Choose your agent. Run the command from your project with Node.js 22.20 or later and Git access to the repository.</p>
+        <p>To use Gift Search inside your agent, choose the agent and run the command from your project.</p>
         <div class="install-options" aria-label="Agent">
           <button class="secondary" type="button" data-agent="claude-code" aria-pressed="false">Claude Code</button>
           <button class="secondary" type="button" data-agent="codex" aria-pressed="true">Codex</button>
@@ -66,37 +67,15 @@ cd gift-search-agent-skill
           <button class="secondary" type="button" data-agent="cursor" aria-pressed="false">Cursor</button>
         </div>
         <div class="code-block"><pre><code id="install-command" aria-live="polite">npx skills add sriaradhyula/gift-search-agent-skill --skill gift-search -a codex</code></pre><button type="button" class="copy" data-copy="install-command">Copy</button></div>
-        <p>Add <code>--global</code> to install for all of your projects. Start a new agent session after installing.</p>
-        <h3>Install from a checkout</h3>
-        <p>If you’re working from an authenticated local clone, run this from the project where you want the skill. Replace the path with your checkout’s absolute path.</p>
-        <div class="code-block"><pre><code id="local-command" aria-live="polite">npx skills add "/path/to/gift-search-agent-skill" --skill gift-search -a codex</code></pre><button type="button" class="copy" data-copy="local-command">Copy</button></div>
-      </section>
-      <section id="claude">
-        <h2>Open from Claude Code</h2>
-        <p>Start a Claude Code session on your computer and enter this prompt.</p>
-        <div class="code-block"><pre><code id="claude-command">/gift-search Find a birthday gift for my sister. She likes coffee and slow mornings. Budget $75 USD, shipping to the United States.</code></pre><button type="button" class="copy" data-copy="claude-command">Copy</button></div>
-        <p>Claude uses its own web tools to verify retailers and summarizes each scout’s contribution and the reviewer’s decisions. Ask Claude to open a dashboard when you want the brief and results in your browser.</p>
-        <p>To use Google Shopping for discovery, set <code>SERPAPI_API_KEY</code> or save the key in <code>~/.config/serpapi.txt</code>. Use <code>SERPAPI_API_KEY_FILE</code> for a different path. Claude can also discover gifts through its web tools.</p>
+        <p>Start a new agent session after installing. <a href="https://github.com/sriaradhyula/gift-search-agent-skill#install">Install from a local copy or for all projects</a></p>
+        <h3 id="claude">Try it in Claude Code</h3>
+        <div class="code-block"><pre><code id="claude-command">/gift-search Find a gift for my sister who loves coffee. Budget $75 USD, shipping to the United States.</code></pre><button type="button" class="copy" data-copy="claude-command">Copy</button></div>
       </section>
       <section id="example">
         <h2>Example run</h2>
-        <p>In a new agent session, ask for a shortlist and a dashboard export.</p>
-        <blockquote id="example-prompt">Use the gift-search skill to find a birthday gift for my sister. She loves coffee and slow mornings. I can spend up to $75 USD, shipping to the United States. Write a gift-report.json I can open in the dashboard.</blockquote>
-        <p>The example dashboard starts with three Christmas gift ideas. Pick a recipient from the list or choose <strong>Someone else…</strong> to enter your own. Choose a suggested interest, type one, or select <strong>I’m not sure</strong> for a broader search. Select <strong>Surprise me</strong> to fill in a different Christmas brief. To view your agent’s search, select <strong>Import results</strong> and open its <code>gift-report.json</code>.</p>
-        <p>Select <strong>Try a demo</strong>, choose a coffee, outdoor, or creative gift scenario, then select <strong>Run demo</strong>. Watch the scouts share leads, the reviewer give feedback, and the team revise the shortlist over two turns. The demos use sample products and prices and run on GitHub Pages without credentials.</p>
-        <p>Select <strong>Share results</strong> to copy a gift list or Markdown checklist with retailer links, or download a PNG for sharing in a message.</p>
-        <div class="guide-links"><a href="./index.html">Open example dashboard ↗</a><a href="./examples/coffee-birthday.json" download>Download example JSON ↓</a></div>
-      </section>
-      <section id="live">
-        <h2>Run the live dashboard locally</h2>
-        <p>Use the <a href="#setup">launcher from the quick start</a> and choose Claude Code, Codex, Cursor, OpenCode, or CAIPE under <strong>Run with</strong>. Claude Code is the default. Set 1–5 <strong>Research turns</strong> and select <strong>Find gifts</strong>.</p>
-        <p>Follow the animated graph as new scout personas take over each turn. In <strong>Research memory</strong>, scouts post public highlights and the reviewer records decisions and follow-ups. The next turn reads those notes. Use <strong>Search history</strong> to load a previous run and <strong>Continue search</strong> to add turns with the original brief and harness.</p>
-        <p>The results show how many Google Shopping leads SerpApi supplied. <strong>Research leads</strong> appears below the shortlist whenever there are leads that did not qualify. Each card shows what the retailer checks found.</p>
-        <p>Open <strong>Chat</strong> to ask the selected harness about the run or any other topic while research continues. Replies render as Markdown, and you can queue another message while the agent is answering.</p>
-        <p>Set <code>GIFT_CLAUDE_CONSOLE=1</code> before starting the server to print activity in your terminal or tmux pane.</p>
-        <p>For OpenAI searches, set <code>OPENAI_API_KEY</code>, configure SerpApi as described above, and run <code>npm run start:openai</code>. Select <strong>Search Google Shopping</strong> and submit the brief. SerpApi finds products and OpenAI web search checks the retailer pages for price, stock, and shipping. Both providers can bill for API calls.</p>
-        <p>With only an OpenAI key, select <strong>Search live retailers</strong> to use web search for discovery and verification. The dashboard also falls back to web discovery if Google Shopping is unavailable or returns no candidates.</p>
-        <p>OpenAI searches default to <code>gpt-5-mini</code>. Set <code>OPENAI_GIFT_MODEL</code> to use a different reasoning model that supports Responses web search and structured output.</p>
+        <p>Choose <strong>Coffee under $75</strong> from the demo picker. Read <strong>Research memory</strong> to see how the second round uses the first reviewer’s feedback.</p>
+        <p>To see a saved report, download the example JSON and open it with <strong>Import results</strong>.</p>
+        <div class="guide-links"><a href="./index.html">Open dashboard ↗</a><a href="./examples/coffee-birthday.json" download>Download example JSON ↓</a></div>
       </section>
       <section id="workflow">
         <h2>How the agents work</h2>
@@ -105,12 +84,11 @@ cd gift-search-agent-skill
           <li><strong>Verify.</strong> A reviewer checks the retailer pages for the product, price, availability, and delivery region.</li>
           <li><strong>Rank.</strong> The shortlist favors recipient fit and reliable listings. Each card includes a reason and a practical caveat.</li>
         </ol>
-        <p>The installed skill uses parallel delegation when your host and permissions support it. Other hosts run the roles as separate passes. Live listings require a web or shopping tool.</p>
-        <div class="guide-links"><a href="https://outshift.cisco.com/blog/ai-ml/ai-holiday-shopper-multi-agent-gift-finder">Read the original Outshift walkthrough ↗</a><a href="https://agentskills.io/specification">Agent Skills specification ↗</a></div>
+        <div class="guide-links"><a href="https://outshift.cisco.com/blog/ai-ml/ai-holiday-shopper-multi-agent-gift-finder">Read the original Outshift walkthrough ↗</a></div>
       </section>
       <section id="update">
         <h2>Update the skill</h2>
-        <p>For a GitHub install, update with the Skills CLI. For a local install, pull the checkout and rerun the install command.</p>
+        <p>For a local install, pull the repository and rerun the install command. For a GitHub install, run the command below.</p>
         <div class="code-block"><pre><code id="update-command">npx skills update gift-search</code></pre><button type="button" class="copy" data-copy="update-command">Copy</button></div>
         <div class="guide-links"><a href="https://github.com/vercel-labs/skills">Skills CLI reference ↗</a></div>
       </section>

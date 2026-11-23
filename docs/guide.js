@@ -1,13 +1,10 @@
 const agents = document.querySelectorAll("[data-agent]");
 const install = document.getElementById("install-command");
-const local = document.getElementById("local-command");
-const command = (source, agent) => `npx skills add ${source} --skill gift-search -a ${agent}`;
 
 for (const button of agents) {
   button.addEventListener("click", () => {
     for (const option of agents) option.setAttribute("aria-pressed", String(option === button));
-    install.textContent = command("sriaradhyula/gift-search-agent-skill", button.dataset.agent);
-    local.textContent = command('"/path/to/gift-search-agent-skill"', button.dataset.agent);
+    install.textContent = `npx skills add sriaradhyula/gift-search-agent-skill --skill gift-search -a ${button.dataset.agent}`;
   });
 }
 
