@@ -68,6 +68,15 @@ h2 { letter-spacing: -0.035em; }
 .holiday-dashboard .site-header { background: #fffdf8; border-color: #eadfce; }
 .holiday-dashboard .brand-mark { background: var(--cranberry); }
 .holiday-dashboard .site-nav a[aria-current="page"] { color: var(--cranberry-dark); border-bottom-color: var(--cranberry); }
+.demo-switch { display: inline-flex; align-items: center; gap: 8px; margin-inline-start: auto; white-space: nowrap; font-size: .83rem; font-weight: 680; }
+.demo-switch input {
+  appearance: none; position: relative; width: 32px; height: 19px; margin: 0;
+  border: 1px solid #8d7966; border-radius: 20px; background: #f3eadd; cursor: pointer;
+}
+.demo-switch input::before { content: ""; position: absolute; inset: 3px auto auto 3px; width: 11px; height: 11px; border-radius: 50%; background: #725b47; }
+.demo-switch input:checked { border-color: var(--green); background: var(--green); }
+.demo-switch input:checked::before { inset-inline-start: 16px; background: white; }
+.demo-switch input:disabled { opacity: .55; cursor: default; }
 .dashboard { flex: 1; padding-block: 34px 46px; }
 .intro {
   color: var(--cream);
@@ -88,10 +97,7 @@ h2 { letter-spacing: -0.035em; }
 .intro > div:first-child { max-width: 60%; }
 .intro h1 { font-size: clamp(1.8rem, 3.35vw, 3rem); }
 .intro h1 em { color: var(--gold); white-space: nowrap; }
-.intro p { margin-top: 6px; max-width: 60ch; color: #fff1e7; font-size: .92rem; line-height: 1.45; }
 .intro-actions { display: flex; flex-wrap: wrap; gap: 8px; flex: none; }
-.intro-actions .primary { background: var(--gold); border-color: var(--gold); color: #43280f; }
-.intro-actions .primary:hover { background: #ffe8bc; }
 .intro-actions .secondary { background: #591123; border-color: #e4ac86; color: var(--cream); }
 .intro-actions .secondary:hover { background: #7b1a35; }
 .primary, .secondary {
@@ -135,16 +141,16 @@ fieldset { min-inline-size: 0; margin: 0; padding: 0; border: 0; }
 .field input::placeholder { color: #6b776d; }
 .field select:disabled { color: #46564c; background: #f6f7f3; opacity: 1; }
 .field-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.24fr); gap: 10px; }
+.field-row:has(#region-field[hidden]) { grid-template-columns: 1fr; }
 .budget-input { display: flex; align-items: center; border: 1px solid var(--line); border-radius: 8px; padding-left: 9px; }
 .budget-input span { color: var(--muted); font-size: .72rem; font-weight: 700; }
 .budget-input input { height: 38px; border: 0; }
 .optional { margin: 0 0 15px; color: var(--muted); font-size: .8rem; }
 .optional summary { padding-block: 2px 4px; font-weight: 630; }
 .optional[open] summary { margin-bottom: 9px; }
-.live-toggle { display: flex; align-items: center; gap: 7px; margin: 0 0 13px; font-size: .82rem; }
-.live-toggle input { accent-color: var(--green); }
 .search-button { width: 100%; background: var(--cranberry); }
 .search-button:hover { background: var(--cranberry-dark); }
+.search-availability { margin-top: 8px; color: var(--muted); font-size: .8rem; }
 .report-brief-fields { display: grid; gap: 12px; margin: 0 0 17px; overflow-wrap: anywhere; }
 .report-brief-fields dt { font-size: .75rem; font-weight: 700; color: var(--muted); }
 .report-brief-fields dd { margin: 3px 0 0; font-size: .9rem; line-height: 1.4; }
@@ -169,6 +175,7 @@ fieldset { min-inline-size: 0; margin: 0; padding: 0; border: 0; }
 .team-header { display: flex; flex-wrap: wrap; align-items: start; justify-content: space-between; gap: 12px; }
 .team-header h2 { font-size: 1.35rem; }
 .team-header p { margin-top: 5px; color: #b4d0be; font-size: .84rem; line-height: 1.45; }
+.team-header p:empty { display: none; }
 .team-header .secondary { min-height: 36px; padding: 6px 11px; color: #fff6e5; border-color: #67806d; background: #1e4334; }
 .team-header .secondary:hover { background: #305744; border-color: #b6cfbe; }
 .team-header .team-toggle { background: var(--cream); border-color: var(--gold); color: #59361e; }
@@ -178,16 +185,16 @@ fieldset { min-inline-size: 0; margin: 0; padding: 0; border: 0; }
 .team-actions { display: flex; flex-wrap: wrap; gap: 7px; }
 .demo-controls {
   display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
-  margin-top: 14px;
+  margin-bottom: 16px; padding: 10px 12px;
+  border: 1px solid #eadac0; border-radius: 12px; background: #fffaf1;
 }
-.demo-controls label { color: #f4e3bc; font-size: .78rem; font-weight: 700; }
+.demo-controls label { font-size: .81rem; font-weight: 700; }
 .demo-controls select {
-  min-width: 0; min-height: 36px; padding: 4px 8px; border: 1px solid #67806d; border-radius: 8px;
-  color: #fff6e5; background: #193d2f; font-size: .83rem;
+  min-width: 0; max-width: 100%; min-height: 36px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 8px;
+  color: var(--ink); background: white; font-size: .83rem;
 }
-.demo-controls .secondary { min-height: 36px; padding: 5px 10px; color: #43280f; background: var(--gold); }
-.demo-controls .secondary:hover { background: #ffe8bc; }
-.demo-controls input { flex-basis: 100%; min-width: 0; padding: 8px; border: 1px solid #67806d; border-radius: 8px; }
+.demo-controls button { min-height: 36px; padding: 5px 10px; }
+.demo-controls input { flex-basis: 100%; min-width: 0; padding: 8px; border: 1px solid var(--line); border-radius: 8px; }
 .team-turn { margin: 14px 0 0; color: var(--gold); font-size: .8rem; font-weight: 700; }
 .team-graph { max-width: 600px; margin: 20px auto 0; }
 .team-parallel { display: grid; grid-template-columns: repeat(var(--scout-count, 2), minmax(0, 1fr)); gap: 13px; }
@@ -261,12 +268,23 @@ fieldset { min-inline-size: 0; margin: 0; padding: 0; border: 0; }
 .team-log a { display: inline-block; margin-top: 4px; font-size: .74rem; }
 @keyframes board-post { from { opacity: .3; transform: translateY(6px); background: #ffebbc; } }
 @keyframes memory-recording { 70%, 100% { box-shadow: 0 0 0 6px #a2224300; } 0% { box-shadow: 0 0 0 0 #a2224370; } }
-.claude-console, .claude-chat { margin-top: 14px; padding: 11px; background: #0c2018; border: 1px solid #3d5d50; border-radius: 9px; }
-.claude-console summary, .claude-chat h3 { font-size: .85rem; font-weight: 700; }
+.claude-console { margin-top: 14px; padding: 11px; background: #0c2018; border: 1px solid #3d5d50; border-radius: 9px; }
+.claude-console summary { font-size: .85rem; font-weight: 700; }
 .claude-console pre {
   max-height: 132px; overflow: auto; margin: 8px 0 0; white-space: pre-wrap; color: #b8ebce; font: .76rem/1.5 ui-monospace, monospace;
 }
-.claude-messages:not(:empty) { overflow: auto; max-height: 275px; margin-top: 10px; }
+.chat-dock {
+  position: fixed; z-index: 4; inset-inline-end: max(16px, env(safe-area-inset-right)); inset-block-end: max(14px, env(safe-area-inset-bottom));
+  display: grid; justify-items: end; gap: 6px; width: min(385px, calc(100% - 32px)); pointer-events: none;
+}
+body:has(.chat-dock:not([hidden])) .dashboard { padding-bottom: 76px; }
+.chat-launcher, .claude-chat { pointer-events: auto; color: #fff9ed; background: #173c2e; border: 1px solid #476958; box-shadow: 0 4px 16px #09211b40; }
+.chat-launcher { grid-row: 2; display: inline-flex; align-items: center; gap: 12px; min-height: 42px; padding: 8px 13px; border-radius: 10px; font-size: .85rem; font-weight: 700; }
+.chat-launcher:hover { background: #254f3f; }
+.chat-launcher::after { content: ""; width: 7px; height: 7px; border: solid currentColor; border-width: 1.5px 1.5px 0 0; transform: translateY(2px) rotate(-45deg); }
+.chat-launcher[aria-expanded="true"]::after { transform: translateY(-2px) rotate(135deg); }
+.claude-chat { grid-row: 1; width: 100%; min-width: 0; padding: 11px; border-radius: 12px; }
+.claude-messages:not(:empty) { overflow: auto; max-height: min(280px, 37dvh); margin-bottom: 9px; }
 .chat-message { padding: 8px 0; border-top: 1px solid #3d5d50; overflow-wrap: anywhere; }
 .chat-message > strong { font-size: .75rem; color: #b9d5c4; }
 .chat-content { margin-top: 3px; line-height: 1.5; font-size: .85rem; }
@@ -283,8 +301,8 @@ fieldset { min-inline-size: 0; margin: 0; padding: 0; border: 0; }
 .chat-markdown table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; }
 .chat-markdown :is(th, td) { padding: 4px 8px; border: 1px solid #52705e; }
 .chat-markdown hr { border: 0; border-top: 1px solid #52705e; }
-.chat-composer { display: flex; align-items: end; gap: 8px; margin-top: 9px; }
-.chat-composer textarea { flex: 1; min-width: 0; resize: vertical; padding: 8px; font: inherit; font-size: .85rem; color: var(--ink); border: 1px solid var(--line); border-radius: 8px; }
+.chat-composer { display: flex; align-items: end; gap: 8px; }
+.chat-composer textarea { flex: 1; min-width: 0; max-height: max(4em, 20dvh); resize: vertical; padding: 8px; font: inherit; font-size: .9rem; color: var(--ink); border: 1px solid var(--line); border-radius: 8px; }
 .chat-error { color: #ffc5a9; margin-top: 8px; font-size: .78rem; }
 @media (prefers-reduced-motion: reduce) {
   .team-wire path[data-status] { animation: none; }
@@ -300,12 +318,6 @@ fieldset { min-inline-size: 0; margin: 0; padding: 0; border: 0; }
   .team-parallel { gap: 6px; }
   .team-node { padding-inline: 5px; }
 }
-.status-bar { display: flex; align-items: center; gap: 10px; border: 1px solid #eeddbe; background: #fff2da; padding: 11px 13px; border-radius: 10px; font-size: .8rem; }
-.status-dot { flex: none; width: 7px; height: 7px; border-radius: 100%; background: #a32142; }
-.status-bar div { flex: 1; line-height: 1.4; }
-.status-bar strong { margin-right: 8px; }
-.status-bar div span { color: var(--muted); }
-.status-bar .text-link { flex: none; }
 .text-link { padding: 0; border: 0; color: var(--green); background: none; text-decoration: none; font-size: .79rem; font-weight: 700; }
 .text-link:hover { text-decoration: underline; text-underline-offset: 3px; }
 .results-heading { display: flex; justify-content: space-between; align-items: end; gap: 10px; margin-block: 22px 15px; }
@@ -339,7 +351,10 @@ fieldset { min-inline-size: 0; margin: 0; padding: 0; border: 0; }
 .research-leads h3 { font-size: 1rem; font-weight: 740; }
 .research-leads > p { margin-block: 5px 12px; color: var(--muted); font-size: .84rem; }
 .results-footer { display: flex; justify-content: end; margin-top: 15px; }
-.run-notes { margin: 15px 0 0; padding-left: 17px; color: var(--muted); font-size: .81rem; line-height: 1.55; overflow-wrap: anywhere; }
+.run-details { margin-top: 16px; color: var(--muted); font-size: .82rem; line-height: 1.55; }
+.run-details summary { color: var(--green); font-weight: 680; }
+.run-details p { margin-top: 8px; }
+.run-notes { margin: 8px 0 0; padding-left: 17px; overflow-wrap: anywhere; }
 .message { margin-top: 10px; border-radius: 8px; padding: 10px 13px; background: #fff0e8; color: #782e17; font-size: .85rem; }
 .empty { padding: 34px 20px; border: 1px dashed #bac8b9; border-radius: 13px; text-align: center; }
 .empty h3 { font-size: 1.1rem; }
@@ -427,7 +442,6 @@ dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
   }
   .intro > div:first-child { max-width: 90%; }
   .intro h1 { font-size: clamp(1.7rem, 5.5vw, 2.3rem); }
-  .intro p { font-size: .85rem; }
   .workspace { grid-template-columns: 1fr; gap: 16px; }
   .results-heading { margin-top: 16px; }
   .guide { grid-template-columns: 1fr; gap: 23px; padding-block: 25px 36px; }
@@ -437,13 +451,11 @@ dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
 
 @media (max-width: 420px) {
   .card-grid { grid-template-columns: 1fr; }
-  .status-bar { flex-wrap: wrap; }
-  .status-bar .text-link { margin-left: 17px; }
   .results-heading { flex-wrap: wrap; align-items: start; }
 }
 
 @media (max-width: 370px) {
-  .intro-actions .primary, .intro-actions .secondary { padding-inline: 10px; font-size: .8rem; }
+  .intro-actions .secondary { padding-inline: 10px; font-size: .8rem; }
   .header-inner { flex-wrap: wrap; gap: 4px 12px; padding-top: 8px; }
   .site-nav { order: 1; width: 100%; min-height: 32px; }
 }
@@ -463,17 +475,18 @@ dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
         <a href="#main" aria-current="page">Agent run</a>
         <a href="https://github.com/sriaradhyula/gift-search-agent-skill#try-it">Skill guide</a>
       </nav>
-      <a class="repo-link" href="https://github.com/sriaradhyula/gift-search-agent-skill">GitHub <span aria-hidden="true">↗</span></a>
+      <label class="demo-switch">
+        <span>Demo mode</span>
+        <input id="demo-mode" type="checkbox" autocomplete="off" role="switch" aria-controls="demo-controls">
+      </label>
     </div>
   </header>
   <main class="shell dashboard" id="main">
     <section class="intro" aria-labelledby="page-title">
       <div>
         <h1 id="page-title">Watch agents find <em>the gift.</em></h1>
-        <p>Give the team a brief and follow each handoff from discovery to shortlist.</p>
       </div>
       <div class="intro-actions">
-        <button id="try-demo" class="primary" type="button" aria-controls="demo-controls" aria-expanded="false">Try a demo</button>
         <button class="secondary" id="import-button" type="button">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4m-4 4 4-4 4 4M4 16v4h16v-4"/></svg>
           Import results
@@ -481,6 +494,14 @@ dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
         <input id="import-file" type="file" accept=".json,application/json" hidden>
       </div>
     </section>
+    <div id="demo-controls" class="demo-controls" hidden>
+      <label for="demo-scenario">Scenario</label>
+      <select id="demo-scenario"></select>
+      <button id="run-demo" class="primary" type="button">Run demo</button>
+      <button id="copy-demo-link" class="secondary" type="button">Copy link</button>
+      <input id="demo-link" aria-label="Demo link" readonly hidden>
+      <span id="demo-link-status" class="sr-only" role="status"></span>
+    </div>
     <div class="workspace">
       <aside class="brief-panel" aria-labelledby="brief-title">
         <div class="brief-heading">
@@ -513,7 +534,7 @@ dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
             </div>
             <div class="field">
               <label for="interests">Interests <span class="field-optional">optional</span></label>
-              <input id="interests" name="interests" placeholder="Type an interest or pick below" value="Coffee, slow mornings" maxlength="240">
+              <input id="interests" name="interests" placeholder="e.g. Coffee, hiking" value="Coffee, slow mornings" maxlength="240">
               <div class="interest-suggestions" role="group" aria-label="Suggested interests">
                 <button class="chip" type="button" data-interest="Coffee &amp; tea" aria-pressed="false">Coffee &amp; tea</button>
                 <button class="chip" type="button" data-interest="Cooking &amp; baking" aria-pressed="false">Cooking &amp; baking</button>
@@ -531,7 +552,7 @@ dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
                   <input type="number" id="budget" name="budget" min="1" max="1000000" step="0.01" value="75" required aria-describedby="budget-currency">
                 </div>
               </div>
-              <div class="field">
+              <div class="field" id="region-field" hidden>
                 <label for="region">Ship to</label>
                 <select id="region" name="region">
                   <option value="US">United States</option><option value="CA">Canada</option><option value="GB">United Kingdom</option>
@@ -541,27 +562,23 @@ dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
               </div>
             </div>
             <details class="optional">
-              <summary>Delivery date &amp; exclusions</summary>
+              <summary>More options</summary>
               <div class="field"><label for="neededBy">Needed by</label><input type="date" id="neededBy" name="neededBy"></div>
               <div class="field"><label for="exclude">Exclude</label><input id="exclude" name="exclude" placeholder="e.g. food, subscriptions" maxlength="200"></div>
             </details>
-            <label class="live-toggle" id="live-setting" hidden>
-              <input type="checkbox" id="live-search">
-              <span id="live-label">Search live retailers</span>
-            </label>
             <div class="field" id="harness-setting" hidden>
               <label for="run-harness">Run with</label>
               <select id="run-harness"></select>
             </div>
             <div class="field" id="research-setting" hidden>
               <label for="research-turns">Research turns</label>
-              <input id="research-turns" type="number" min="1" max="5" step="1" value="1" required disabled aria-describedby="research-hint">
-              <small id="research-hint">Each turn assigns new scouts and checks their leads.</small>
+              <input id="research-turns" type="number" min="1" max="5" step="1" value="1" required disabled>
             </div>
-            <button class="primary search-button" id="search-button" type="submit">
+            <button class="primary search-button" id="search-button" type="submit" disabled>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.5"/><path d="m15 15 4 4"/></svg>
               <span id="search-label">Find gifts</span>
             </button>
+            <p id="search-availability" class="search-availability" hidden>Turn on Demo mode to try a search.</p>
           </fieldset>
         </form>
         <div id="report-brief" hidden>
@@ -585,26 +602,17 @@ dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
           <p id="history-status" class="brief-status" role="status"></p>
         </details>
       </aside>
-      <section class="results" aria-labelledby="results-title">
+      <section class="results" aria-label="Research and results">
         <section class="team-panel" aria-labelledby="team-title">
           <div class="team-header">
-            <div><h2 id="team-title">Multi-agent Collaboration</h2><p id="team-mode" aria-live="polite">Follow the team from first ideas to shortlist.</p></div>
+            <div><h2 id="team-title">Multi-agent Collaboration</h2><p id="team-mode" aria-live="polite"></p></div>
             <div class="team-actions">
-              <button id="replay-run" class="secondary" type="button" hidden>Replay last run</button>
-              <button id="stop-run" class="secondary" type="button" hidden>Stop research</button>
-              <button id="open-claude-chat" class="secondary" type="button" hidden>Chat</button>
-              <button id="team-toggle" class="secondary team-toggle" type="button" aria-controls="team-details" aria-expanded="true">Hide details</button>
+              <button id="replay-run" class="secondary" type="button" aria-label="Replay last run" hidden>Replay</button>
+              <button id="stop-run" class="secondary" type="button" aria-label="Stop research" hidden>Stop</button>
+              <button id="team-toggle" class="secondary team-toggle" type="button" aria-controls="team-details" aria-expanded="false">Show details</button>
             </div>
           </div>
-          <div id="demo-controls" class="demo-controls" tabindex="-1" hidden>
-            <label for="demo-scenario">Offline demo</label>
-            <select id="demo-scenario"></select>
-            <button id="run-demo" class="secondary" type="button">Run demo</button>
-            <button id="copy-demo-link" class="secondary" type="button">Copy demo link</button>
-            <input id="demo-link" aria-label="Demo link" readonly hidden>
-            <span id="demo-link-status" class="sr-only" role="status"></span>
-          </div>
-          <div id="team-details">
+          <div id="team-details" hidden>
             <p id="team-turn" class="team-turn" role="status" hidden></p>
             <div class="team-graph" id="team-graph" aria-label="Team planner, parallel research agents, retailer review, and shortlist">
               <div class="team-node team-single" data-node="planner"><span class="team-character" aria-hidden="true">🎅</span><strong>Team planner</strong><span class="team-node-status">Waiting for brief</span></div>
@@ -622,15 +630,6 @@ dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
               <pre id="claude-console-lines" aria-labelledby="team-console-title"></pre>
             </details>
           </div>
-          <form id="claude-chat" class="claude-chat" hidden>
-            <h3 id="chat-title">Chat with Claude Code</h3>
-            <div id="claude-messages" class="claude-messages" role="log" aria-label="Conversation"></div>
-            <label class="sr-only" for="claude-question">Message selected harness</label>
-            <div class="chat-composer">
-              <textarea id="claude-question" rows="2" placeholder="Message the agent…" required></textarea>
-              <button id="send-claude" class="secondary" type="submit">Send</button>
-            </div>
-          </form>
         </section>
         <aside id="research-board" class="research-board" aria-labelledby="board-title" hidden>
           <header class="board-heading">
@@ -647,39 +646,53 @@ dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
           </div>
         </aside>
         <div class="results-main">
-          <div id="results-state" class="status-bar">
-            <span class="status-dot" aria-hidden="true"></span>
-            <div><strong id="mode-label">Sample run</strong><span id="mode-description">Illustrative gifts and prices from the demo catalog.</span></div>
-            <a href="https://github.com/sriaradhyula/gift-search-agent-skill#try-it" class="text-link">How it works <span aria-hidden="true">↗</span></a>
-          </div>
           <p id="message" class="message" role="alert" hidden></p>
-          <div class="results-heading">
-            <div>
-              <h2 id="results-title">Gift shortlist</h2>
-              <p id="summary" aria-live="polite"></p>
+          <div id="results-display" hidden>
+            <div class="results-heading">
+              <div>
+                <h2 id="results-title">Gift shortlist</h2>
+                <p id="summary" aria-live="polite"></p>
+                <p id="mode-description"></p>
+              </div>
+              <div class="results-actions">
+                <label class="sort-control">
+                  <span class="sr-only">Sort results</span>
+                  <select id="sort"><option value="recommended">Recommended</option><option value="price-low">Price low to high</option><option value="price-high">Price high to low</option></select>
+                </label>
+                <button id="share-results" class="secondary" type="button">Share results</button>
+              </div>
+            </div>
+            <div class="card-grid" id="cards"></div>
+            <div id="empty" class="empty" hidden><h3 id="empty-title">No matching gifts</h3><p id="empty-message"></p></div>
+            <section id="research-leads" class="research-leads" aria-labelledby="leads-summary" hidden>
+              <h3 id="leads-summary"></h3>
+              <p>Leads that didn’t qualify.</p>
+              <div class="card-grid" id="lead-cards"></div>
+            </section>
+            <details id="run-details" class="run-details" hidden>
+              <summary>Run notes</summary>
               <p id="discovery-status" hidden></p>
-            </div>
-            <div class="results-actions">
-              <label class="sort-control">
-                <span class="sr-only">Sort results</span>
-                <select id="sort"><option value="recommended">Recommended</option><option value="price-low">Price low to high</option><option value="price-high">Price high to low</option></select>
-              </label>
-              <button id="share-results" class="secondary" type="button">Share results</button>
-            </div>
+              <ul class="run-notes" id="run-notes" hidden></ul>
+            </details>
+            <div class="results-footer"><button class="text-link" id="download" type="button">Download results <span aria-hidden="true">↓</span></button></div>
           </div>
-          <div class="card-grid" id="cards"></div>
-          <div id="empty" class="empty" hidden><h3 id="empty-title">No matching gifts</h3><p id="empty-message"></p></div>
-          <section id="research-leads" class="research-leads" aria-labelledby="leads-summary" hidden>
-            <h3 id="leads-summary"></h3>
-            <p>See what the reviewer found and what kept each lead off the shortlist.</p>
-            <div class="card-grid" id="lead-cards"></div>
-          </section>
-          <ul class="run-notes" id="run-notes" hidden></ul>
-          <div class="results-footer"><button class="text-link" id="download" type="button">Download results <span aria-hidden="true">↓</span></button></div>
         </div>
       </section>
     </div>
   </main>
+  <aside id="chat-dock" class="chat-dock" aria-label="Agent chat" hidden>
+    <button id="open-claude-chat" class="chat-launcher" type="button" aria-controls="claude-chat" aria-expanded="false">
+      <span id="chat-title">Chat with Claude Code</span>
+    </button>
+    <form id="claude-chat" class="claude-chat" aria-labelledby="chat-title" hidden>
+      <div id="claude-messages" class="claude-messages" role="log" aria-label="Conversation"></div>
+      <label class="sr-only" for="claude-question">Message</label>
+      <div class="chat-composer">
+        <textarea id="claude-question" rows="2" placeholder="Ask anything…" required></textarea>
+        <button id="send-claude" class="secondary" type="submit">Send</button>
+      </div>
+    </form>
+  </aside>
   <footer class="site-footer">
     <div class="shell footer-inner"><span>Gift Search</span><a href="https://outshift.cisco.com/blog/ai-ml/ai-holiday-shopper-multi-agent-gift-finder">Original Outshift project <span aria-hidden="true">↗</span></a></div>
   </footer>
@@ -1509,9 +1522,19 @@ function enableChat({ endpoint, getContext, getHarness, onActivity }) {
       form.requestSubmit();
     }
   });
-  jump.addEventListener("click", () => field.focus());
-  form.hidden = false;
-  jump.hidden = false;
+  jump.addEventListener("click", () => {
+    const opened = form.hidden;
+    form.hidden = !opened;
+    jump.setAttribute("aria-expanded", String(opened));
+    if (opened) field.focus({ preventScroll: true });
+  });
+  form.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !event.isComposing) {
+      form.hidden = true;
+      jump.setAttribute("aria-expanded", "false");
+      jump.focus({ preventScroll: true });
+    }
+  });
 }
 
 
@@ -1685,7 +1708,7 @@ const surprise = select("surprise-brief");
 const briefStatus = select("brief-status");
 const cards = select("cards");
 const sort = select("sort");
-const live = select("live-search");
+const demoMode = select("demo-mode");
 const harnessChoice = select("run-harness");
 const savedRuns = select("saved-runs");
 const region = select("region");
@@ -1695,16 +1718,16 @@ const demoChoice = select("demo-scenario");
 const gridMount = document.querySelector('meta[name="gift-search-mount"]')?.content;
 const liveApi = (path) => `${gridMount ?? "."}/api/${path}`;
 const reportFragment = "#report=";
-const teamIntroduction = "Follow the team from first ideas to shortlist.";
+const teamIntroduction = "";
 const regionCurrencies = { US: "USD", CA: "CAD", GB: "GBP", AU: "AUD", DE: "EUR", FR: "EUR", IN: "INR", JP: "JPY" };
-const modeLabels = { sample: "Sample run", live: "Live search", ideas: "Ideas only" };
 const modeDescriptions = {
-  sample: "Illustrative gifts and prices from the demo catalog.",
-  live: "Listings from a web search. Check the retailer for changes.",
-  ideas: "Suggested gifts without a verified listing.",
+  sample: "Demo results",
+  live: "Live results · Prices can change",
+  ideas: "Unverified ideas",
 };
 const exampleBriefs = Object.values(examples);
 
+let liveReady = false;
 let report = runSample(readBrief());
 let running = false;
 let harnessMode = false;
@@ -1818,9 +1841,9 @@ function sortedGifts() {
 
 function render() {
   const { mode, brief, gifts, notes, checkedOn, discovery, leads = [] } = report;
-  select("mode-label").textContent = modeLabels[mode];
   select("mode-description").textContent = checkedOn
-    ? `Listings checked ${checkedOn}. Check the retailer for changes.` : modeDescriptions[mode];
+    ? `Checked ${checkedOn} · Prices can change` : modeDescriptions[mode];
+  select("results-display").hidden = mode === "sample" && !demoMode.checked && !form.hidden;
   const budget = brief.budget === null ? "" : ` · Up to ${formatMoney(brief.budget, brief.currency)} ${brief.currency}`;
   const details = [brief.recipient, brief.occasion].filter(Boolean).join(" · ");
   const resultType = mode === "live" ? (gifts.length === 1 ? "verified gift" : "verified gifts")
@@ -1837,12 +1860,13 @@ function render() {
   select("empty").hidden = gifts.length > 0 || leads.length > 0;
   select("empty-title").textContent = mode === "live" ? "No verified gifts" : "No matching gifts";
   select("empty-message").textContent = mode === "sample"
-    ? "Try a different interest, budget, or example brief."
-    : "Check the run notes for details, or broaden the brief and search again.";
+    ? "Try another interest or budget."
+    : "See run notes or try a broader search.";
   sort.disabled = gifts.length < 2;
   const notesList = select("run-notes");
   notesList.replaceChildren(...notes.map((note) => element("li", "", note)));
   notesList.hidden = !notes.length || (mode === "sample" && notes.length === 1 && notes[0] === examplesNote);
+  select("run-details").hidden = !discovery && notesList.hidden;
 }
 
 const examplesNote = report.notes[0];
@@ -1853,14 +1877,30 @@ function message(text = "") {
   banner.textContent = text;
 }
 
-function updateRegion() {
-  if (!live.checked) region.value = "US";
-  region.disabled = !live.checked;
-  select("budget-currency").textContent = regionCurrencies[region.value];
-  const showResearchTurns = harnessMode && live.checked;
+function searchesLive() {
+  return liveReady && !demoMode.checked;
+}
+
+function updateSearchButton() {
+  select("search-button").disabled = !searchesLive() && !demoMode.checked;
+  select("search-label").textContent = running ? "Searching…" : demoMode.checked ? "Find sample gifts" : "Find gifts";
+}
+
+function updateMode() {
+  const liveSearch = searchesLive();
+  select("demo-controls").hidden = !demoMode.checked;
+  select("region-field").hidden = !liveSearch;
+  region.disabled = !liveSearch;
+  select("budget-currency").textContent = regionCurrencies[liveSearch ? region.value : "US"];
+  const showResearchTurns = harnessMode && liveSearch;
   select("harness-setting").hidden = !showResearchTurns;
   select("research-setting").hidden = !showResearchTurns;
   select("research-turns").disabled = !showResearchTurns;
+  select("search-availability").hidden = liveSearch || demoMode.checked;
+  select("search-history").hidden = !historyEnabled || !liveSearch;
+  updateChatHeading();
+  updateTeamActions();
+  updateSearchButton();
 }
 
 function updateRecipient() {
@@ -1870,13 +1910,14 @@ function updateRecipient() {
 }
 
 function readBrief() {
+  const destination = searchesLive() ? region.selectedOptions[0] : region.options[0];
   return {
     recipient: recipientChoice.value || customRecipient.value.trim(),
     occasion: select("occasion").value,
     interests: interestsInput.value.trim(),
     budget: select("budget").valueAsNumber,
-    currency: regionCurrencies[region.value],
-    region: region.selectedOptions[0].text,
+    currency: regionCurrencies[destination.value],
+    region: destination.text,
     neededBy: select("neededBy").value || null,
     exclude: select("exclude").value.trim(),
   };
@@ -1920,13 +1961,18 @@ function openReport(nextReport) {
   showReport(nextReport);
 }
 
-select("new-search").addEventListener("click", () => {
+function showBriefForm() {
   if (history.state?.giftReport) history.replaceState(null, "", location.href);
   form.hidden = false;
   surprise.hidden = false;
   loadedRun = undefined;
   select("resume-run").hidden = true;
   select("report-brief").hidden = true;
+}
+
+select("new-search").addEventListener("click", () => {
+  showBriefForm();
+  render();
   select("recipient").focus();
 });
 
@@ -1956,17 +2002,19 @@ function setRunning(value) {
   surprise.disabled = value;
   select("import-button").disabled = value;
   updateTeamActions();
-  select("search-label").textContent = value ? "Finding and checking gifts…" : "Find gifts";
+  updateSearchButton();
   cards.setAttribute("aria-busy", String(value));
 }
 
 function updateTeamActions() {
+  demoMode.disabled = running || loadingRun;
   for (const id of ["demo-scenario", "run-demo", "replay-run"]) select(id).disabled = running;
-  select("replay-run").hidden = !lastRun?.events.length;
+  select("replay-run").hidden = demoMode.checked || !lastRun?.events.length;
   select("stop-run").hidden = !runAbort;
   savedRuns.disabled = running || loadingRun || !savedRuns.options.length;
   select("load-run").disabled = savedRuns.disabled;
-  const canResume = loadedRun && loadedRun.status !== "running" && harnessOptions.get(loadedRun.harness)?.available;
+  select("resume-run").hidden = !loadedRun || !searchesLive();
+  const canResume = searchesLive() && loadedRun && loadedRun.status !== "running" && harnessOptions.get(loadedRun.harness)?.available;
   select("continue-run").disabled = running || loadingRun || !canResume;
   select("additional-turns").disabled = running || loadingRun || !canResume;
   select("new-search").disabled = running || loadingRun;
@@ -1980,6 +2028,7 @@ function selectedHarness(id = harnessChoice.value) {
 
 function updateChatHeading() {
   select("chat-title").textContent = `Chat with ${selectedHarness().label}`;
+  select("chat-dock").hidden = !searchesLive() || !harnessOptions.get(harnessChoice.value)?.available;
 }
 
 function restoreTimeline(label, events, harness) {
@@ -2021,7 +2070,7 @@ select("load-run").addEventListener("click", async () => {
     const saved = await readHistory(liveApi(`runs/${encodeURIComponent(savedRuns.value)}`));
     openReport(saved.report);
     loadedRun = saved;
-    harnessChoice.value = saved.harness;
+    if (harnessOptions.get(saved.harness)?.available) harnessChoice.value = saved.harness;
     updateChatHeading();
     const harness = selectedHarness(saved.harness);
     restoreTimeline(`Saved ${harness.label} run`, saved.events, harness);
@@ -2032,7 +2081,6 @@ select("load-run").addEventListener("click", async () => {
     select("history-status").textContent = saved.status === "running" ? "This run is still active."
       : `${summary}${saved.status === "complete" ? "" : " Continue from the last completed turn."}`;
     select("additional-turns").value = "1";
-    select("resume-run").hidden = false;
     message();
   } catch (error) {
     message(error.message);
@@ -2060,8 +2108,8 @@ form.addEventListener("submit", async (event) => {
     message("Enter a recipient and a valid budget.");
     return;
   }
-  if (!live.checked) {
-    showSampleBrief(brief);
+  if (!searchesLive()) {
+    if (demoMode.checked) showSampleBrief(brief);
     return;
   }
   const researchTurns = select("research-turns").valueAsNumber;
@@ -2136,16 +2184,12 @@ select("replay-run").addEventListener("click", async () => {
 });
 
 demoChoice.replaceChildren(...demoScenarios.map(({ id, title }) => new Option(title, id)));
-function revealDemoControls() {
-  const controls = select("demo-controls");
-  controls.hidden = false;
-  select("try-demo").setAttribute("aria-expanded", "true");
-  return controls;
-}
-
-select("try-demo").addEventListener("click", () => {
-  const controls = revealDemoControls();
-  (demoChoice.disabled ? controls : demoChoice).focus();
+demoMode.addEventListener("change", () => {
+  message();
+  briefStatus.textContent = "";
+  updateMode();
+  if (!demoMode.checked && report.mode === "sample" && !form.hidden) resetTeam(teamIntroduction);
+  render();
 });
 
 demoChoice.addEventListener("change", () => {
@@ -2166,7 +2210,7 @@ copyDemoLink.addEventListener("click", async () => {
     await navigator.clipboard.writeText(url.href);
     copyDemoLink.textContent = "Copied";
     status.textContent = "Demo link copied.";
-    setTimeout(() => { copyDemoLink.textContent = "Copy demo link"; }, 1500);
+    setTimeout(() => { copyDemoLink.textContent = "Copy link"; }, 1500);
   } catch {
     const field = select("demo-link");
     field.value = url.href;
@@ -2178,9 +2222,11 @@ copyDemoLink.addEventListener("click", async () => {
 });
 
 select("run-demo").addEventListener("click", async () => {
-  if (running) return;
+  if (running || !demoMode.checked) return;
   const scenario = demoScenarios.find(({ id }) => id === demoChoice.value);
   if (!scenario) return;
+  showBriefForm();
+  fillExampleBrief(scenario.brief);
   message();
   setRunning(true);
   try {
@@ -2218,8 +2264,8 @@ function updateInterestSuggestions() {
 function updateBriefPreview() {
   updateInterestSuggestions();
   message();
-  briefStatus.textContent = live.checked ? "Brief ready. Select Find gifts to search." : "";
-  if (live.checked) return;
+  briefStatus.textContent = "";
+  if (!demoMode.checked) return;
   const brief = readBrief();
   if (validBrief(brief) && brief.recipient) showSampleBrief(brief);
 }
@@ -2249,11 +2295,7 @@ for (const button of interestSuggestions) {
 sort.addEventListener("change", render);
 recipientChoice.addEventListener("change", updateRecipient);
 interestsInput.addEventListener("input", updateInterestSuggestions);
-live.addEventListener("change", () => {
-  briefStatus.textContent = "";
-  updateRegion();
-});
-region.addEventListener("change", updateRegion);
+region.addEventListener("change", () => { select("budget-currency").textContent = regionCurrencies[region.value]; });
 select("import-button").addEventListener("click", () => file.click());
 file.addEventListener("change", async () => {
   const selected = file.files[0];
@@ -2295,7 +2337,7 @@ async function checkLiveAvailability() {
     const response = await fetch(liveApi("config"));
     if (!response.ok || !response.headers.get("Content-Type")?.includes("application/json")) return;
     const config = await response.json();
-    select("live-setting").hidden = config.live !== true;
+    liveReady = config.live === true;
     if (config.claude === true) {
       harnessMode = true;
       const available = config.harnesses ?? [{ id: "claude", label: "Claude Code", available: true }];
@@ -2307,39 +2349,32 @@ async function checkLiveAvailability() {
       }));
       const preferred = harnessOptions.get(config.defaultHarness ?? "claude");
       harnessChoice.value = preferred?.available ? preferred.id : available.find((option) => option.available)?.id ?? "";
-      live.checked = Boolean(harnessChoice.value);
-      live.disabled = !harnessChoice.value;
+      liveReady &&= Boolean(harnessChoice.value);
       select("research-turns").max = config.maxResearchTurns ?? 5;
       select("additional-turns").max = config.maxResearchTurns ?? 5;
-      updateRegion();
-      select("live-label").textContent = "Search live retailers";
       harnessChoice.addEventListener("change", updateChatHeading);
-      updateChatHeading();
       if (harnessChoice.value) enableChat({
         endpoint: liveApi("chat"), getContext: chatContext, getHarness: selectedHarness, onActivity: showTeamEvent,
       });
       historyEnabled = config.history === true;
-      select("search-history").hidden = !historyEnabled;
       void refreshHistory();
     }
-    else if (config.shopping === true) select("live-label").textContent = "Search Google Shopping";
   } catch {
     // A separate server is optional for the sample and import workflows.
   }
 }
 
 updateRecipient();
-updateRegion();
 updateInterestSuggestions();
 render();
 openInitialReport();
 const linkedDemo = demoScenarios.find(({ id }) => id === new URLSearchParams(location.search).get("demo"));
 if (linkedDemo && !form.hidden) {
+  demoMode.checked = true;
   demoChoice.value = linkedDemo.id;
   fillExampleBrief(linkedDemo.brief);
-  revealDemoControls();
 }
-const liveAvailability = checkLiveAvailability();
+const liveAvailability = checkLiveAvailability().finally(updateMode);
 </script>
 </body>
 </html>
