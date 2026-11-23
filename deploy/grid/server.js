@@ -27,7 +27,7 @@ function send(response, status, headers = {}) {
 
 const server = createServer(async (request, response) => {
   const urlPath = request.url.split("?")[0];
-  const path = urlPath.startsWith(`${mountPath}/`) ? urlPath.slice(mountPath.length) : urlPath;
+  const path = urlPath === mountPath ? "/" : urlPath.startsWith(`${mountPath}/`) ? urlPath.slice(mountPath.length) : urlPath;
   const liveRoute = isLiveRoute(request.method, path);
   if (request.method !== "GET" && request.method !== "HEAD" && !(liveRoute && liveEnabled)) {
     send(response, 405, { Allow: "GET, HEAD" });
@@ -67,7 +67,7 @@ const server = createServer(async (request, response) => {
   }
 
   try {
-    const asset = await readDashboardAsset(urlPath, mountPath);
+    const asset = await readDashboardAsset(path, mountPath);
     if (!asset) {
       send(response, 404);
       return response.end();

@@ -18,7 +18,7 @@ function chatMarkdown() {
   return md;
 }
 
-export function enableChat({ getContext, getHarness, onActivity }) {
+export function enableChat({ endpoint, getContext, getHarness, onActivity }) {
   const form = document.getElementById("claude-chat");
   const field = document.getElementById("claude-question");
   const messages = document.getElementById("claude-messages");
@@ -57,7 +57,7 @@ export function enableChat({ getContext, getHarness, onActivity }) {
     reply.parentElement.setAttribute("aria-busy", "true");
     try {
       const message = { role: "user", content };
-      const response = await fetch("./api/chat", {
+      const response = await fetch(endpoint, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ harness: harness.id, messages: [...history, message], context }),
       });

@@ -23,6 +23,7 @@ const file = select("import-file");
 const dialog = select("gift-detail");
 const demoChoice = select("demo-scenario");
 const gridMount = document.querySelector('meta[name="gift-search-mount"]')?.content;
+const liveApi = (path) => `${gridMount ?? "."}/api/${path}`;
 const reportFragment = "#report=";
 const teamIntroduction = "Follow the team from first ideas to shortlist.";
 const regionCurrencies = { US: "USD", CA: "CAD", GB: "GBP", AU: "AUD", DE: "EUR", FR: "EUR", IN: "INR", JP: "JPY" };
@@ -327,7 +328,7 @@ async function refreshHistory(preferred = savedRuns.value) {
   if (!historyEnabled) return;
   const status = select("history-status");
   try {
-    const runs = await readHistory("./api/runs");
+    const runs = await readHistory(liveApi("runs"));
     const formatDate = new Intl.DateTimeFormat(undefined, { dateStyle: "short", timeStyle: "short" });
     savedRuns.replaceChildren(...runs.map((run) => new Option(
       [run.recipient, run.occasion, selectedHarness(run.harness).label, formatDate.format(new Date(run.updatedAt))].filter(Boolean).join(" · "),
@@ -347,7 +348,7 @@ select("load-run").addEventListener("click", async () => {
   loadingRun = true;
   updateTeamActions();
   try {
-    const saved = await readHistory(`./api/runs/${encodeURIComponent(savedRuns.value)}`);
+    const saved = await readHistory(liveApi(`runs/${encodeURIComponent(savedRuns.value)}`));
     openReport(saved.report);
     loadedRun = saved;
     harnessChoice.value = saved.harness;
@@ -406,7 +407,7 @@ async function startSearch(body, saved) {
   setRunning(true);
   if (harnessMode) restoreTimeline(`Live ${harness.label} run`, events, harness);
   try {
-    const response = await fetch("./api/search", {
+    const response = await fetch(liveApi("search"), {
       method: "POST",
       headers: { "Content-Type": "application/json", ...(harnessMode && { Accept: "application/x-ndjson" }) },
       body: JSON.stringify(body),
@@ -439,7 +440,7 @@ async function startSearch(body, saved) {
     runAbort = undefined;
     if (saved && runId && historyEnabled) {
       try {
-        loadedRun = await readHistory(`./api/runs/${encodeURIComponent(runId)}`);
+        loadedRun = await readHistory(liveApi(`runs/${encodeURIComponent(runId)}`));
         if (stopped && loadedRun.status === "running") loadedRun.status = "stopped";
         if (loadedRun.status !== "running") select("history-status").textContent = `${loadedRun.completedTurns} turns saved.`;
       } catch {
@@ -621,7 +622,7 @@ async function checkLiveAvailability() {
   // A static site can omit this endpoint. An HTML fallback also leaves the demo available.
   if (!gridMount && !["localhost", "127.0.0.1", "[::1]"].includes(location.hostname)) return;
   try {
-    const response = await fetch("./api/config");
+    const response = await fetch(liveApi("config"));
     if (!response.ok || !response.headers.get("Content-Type")?.includes("application/json")) return;
     const config = await response.json();
     select("live-setting").hidden = config.live !== true;
@@ -644,7 +645,9 @@ async function checkLiveAvailability() {
       select("live-label").textContent = "Search live retailers";
       harnessChoice.addEventListener("change", updateChatHeading);
       updateChatHeading();
-      if (harnessChoice.value) enableChat({ getContext: chatContext, getHarness: selectedHarness, onActivity: showTeamEvent });
+      if (harnessChoice.value) enableChat({
+        endpoint: liveApi("chat"), getContext: chatContext, getHarness: selectedHarness, onActivity: showTeamEvent,
+      });
       historyEnabled = config.history === true;
       select("search-history").hidden = !historyEnabled;
       void refreshHistory();
