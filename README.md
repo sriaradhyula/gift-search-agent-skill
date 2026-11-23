@@ -2,6 +2,8 @@
 
 An installable skill and a live demo of how agents collaborate on a gift search. Claude assigns research specialists for each brief, and a reviewer posts what makes the shortlist. This project revisits the [Outshift holiday shopper walkthrough](https://outshift.cisco.com/blog/ai-ml/ai-holiday-shopper-multi-agent-gift-finder).
 
+[Try the chocolate demo online](https://sriaradhyula.github.io/gift-search-agent-skill/?demo=chocolate) or follow the [local setup guide](https://sriaradhyula.github.io/gift-search-agent-skill/guide.html#setup).
+
 ## Quick start
 
 1. Install Node.js 22.20 or later with npm. [Download Node.js](https://nodejs.org/en/download)
@@ -134,3 +136,7 @@ After editing the dashboard, run `npm run build:dashboard` to refresh the HTML b
 ## Update
 
 For an install from GitHub, run `npx skills update gift-search`. For an install from a local checkout, pull the checkout and rerun the installer. See the [Skills CLI reference](https://github.com/vercel-labs/skills) for installation options.
+
+## License
+
+Gift Search is licensed under the [Apache License 2.0](LICENSE). See [NOTICE](NOTICE) for third-party attribution.

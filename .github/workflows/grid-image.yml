@@ -3,9 +3,9 @@ name: Gift Search Grid image
 on:
   push:
     branches: [main, codex/grid-gift-search]
-    paths: [.github/workflows/grid-image.yml, deploy/grid/**, docs/**, server/dashboard-assets.js, package.json, LICENSE]
+    paths: [.github/workflows/grid-image.yml, deploy/grid/**, docs/**, server/dashboard-assets.js, package.json, LICENSE, NOTICE]
   pull_request:
-    paths: [.github/workflows/grid-image.yml, deploy/grid/**, docs/**, server/dashboard-assets.js, package.json, LICENSE]
+    paths: [.github/workflows/grid-image.yml, deploy/grid/**, docs/**, server/dashboard-assets.js, package.json, LICENSE, NOTICE]
   workflow_dispatch:
 
 permissions:

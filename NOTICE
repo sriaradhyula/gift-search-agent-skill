@@ -1,0 +1,10 @@
+Gift Search
+Copyright 2026 Sri Aradhyula
+
+Gift Search is licensed under the Apache License, Version 2.0.
+
+The dashboard includes markdown-it, copyright 2014 Vitaly Puzrin and Alex
+Kocharin. Its MIT license is included in docs/assets/markdown-it.min.js.
+
+The Grid runtime depends on jose, copyright 2018 Filip Skokan. Its MIT
+license is distributed with the installed dependency.

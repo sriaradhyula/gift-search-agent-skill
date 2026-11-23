@@ -3,3 +3,6 @@ blog/
 **/node_modules/
 **/.env*
 **/.DS_Store
+**/*.key
+**/*.pem
+**/serpapi.txt
