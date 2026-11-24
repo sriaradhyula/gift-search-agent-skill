@@ -38,7 +38,7 @@ function publicAddress(ip) {
 const pageTypes = /^(text\/(html|plain)|application\/xhtml\+xml)$/i;
 const thumbnailTypes = /^image\/(jpeg|png|webp)$/i;
 const pageRequest = { accept: "text/html,application/xhtml+xml,text/plain", types: pageTypes, maxBytes: 2_000_000 };
-const thumbnailRequest = { accept: "image/webp,image/jpeg,image/png", types: thumbnailTypes, maxBytes: 512 * 1024 };
+const thumbnailRequest = { accept: "image/webp,image/jpeg,image/png", types: thumbnailTypes, maxBytes: 1024 * 1024 };
 
 async function openPublicResource(url, signal, { accept, types, maxBytes }) {
   const { address } = await lookup(url.hostname, { family: 4 });
@@ -128,18 +128,39 @@ async function fetchRetailer(input, signal) {
 }
 
 export function retailerThumbnailUrl(html, pageUrl) {
+  function resolveImage(value) {
+    return typeof value === "string" && value.trim() && URL.canParse(value, pageUrl)
+      ? retailerUrl(new URL(value, pageUrl).href) : null;
+  }
   const images = new Map();
   for (const [, tag] of html.split(/<\/head\s*>/i, 1)[0].matchAll(/<meta\b((?:"[^"]*"|'[^']*'|[^"'<>])*)>/gi)) {
     const attrs = Object.fromEntries([...tag.matchAll(/([\w:-]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g)]
       .map(([, name, quoted, single]) => [name.toLowerCase(), quoted ?? single]));
     const property = attrs.property?.toLowerCase();
     if (!["og:image:secure_url", "og:image"].includes(property) || !attrs.content || images.has(property)) continue;
-    const value = stripMarkup(attrs.content);
-    const absolute = URL.canParse(value, pageUrl) ? new URL(value, pageUrl) : null;
-    const image = absolute && retailerUrl(absolute.href);
+    const image = resolveImage(stripMarkup(attrs.content));
     if (image) images.set(property, image);
   }
-  return images.get("og:image:secure_url") ?? images.get("og:image") ?? null;
+  const preview = images.get("og:image:secure_url") ?? images.get("og:image");
+  if (preview) return preview;
+
+  for (const [, contents] of html.matchAll(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)) {
+    let data;
+    try {
+      data = JSON.parse(contents);
+    } catch {
+      continue;
+    }
+    const entries = [data].flatMap((entry) => Array.isArray(entry?.["@graph"]) ? entry["@graph"] : entry);
+    for (const entry of entries) {
+      if (![entry?.["@type"]].flat().some((type) => type === "Product" || type === "https://schema.org/Product")) continue;
+      for (const value of [entry.image].flat()) {
+        const image = resolveImage(value?.contentUrl ?? value?.url ?? value);
+        if (image) return image;
+      }
+    }
+  }
+  return null;
 }
 
 function imageSignatureMatches(type, body) {
