@@ -112,8 +112,8 @@ function budgetAndDeduplicate(gifts, budget) {
 
 async function discoverWeb(brief, options) {
   const directions = [
-    "Scout up to three retailer listings directly tied to the recipient's interests. If none are given, use the occasion and recipient to find broadly suitable gifts.",
-    "Scout up to three retailer listings for adjacent or unexpected gifts that suit the occasion.",
+    "Scout up to three retailer listings directly tied to the recipient's interests. For a coworker's Secret Santa gift, look for a specific, workplace-appropriate match. If no interests are given, find broadly suitable gifts that need little setup.",
+    "Scout up to three retailer listings for unexpected gifts across distinct categories. For White Elephant, find playful options an unknown recipient could use or a group could try during the exchange. For family, consider hobbies and shared activities.",
   ];
   const scouts = await Promise.allSettled(directions.map((instructions) => research({
     ...options, instructions, input: { brief },

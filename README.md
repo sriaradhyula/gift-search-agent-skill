@@ -1,6 +1,6 @@
 # Gift Search v2
 
-Find gifts with your own Claude Code and watch a team of agents research, compare, and verify the results.
+Whether you’re looking for a Secret Santa gift or something unique for a family member, collaborate with agents to find ideas and refine your search.
 
 ## Try it
 
@@ -30,7 +30,7 @@ npx skills add sriaradhyula/gift-search-agent-skill --skill gift-search
 
 Start a new session and ask your agent to use the skill.
 
-> Find a Christmas gift under $55 for a friend who loves dark chocolate. It needs to ship to the United States.
+> Find a creative Secret Santa gift for a coworker who loves dark chocolate. Keep it under $25 USD and check shipping to the United States.
 
 The skill creates an HTML dashboard after each search, tries to open it in your browser, and gives you the link.
 

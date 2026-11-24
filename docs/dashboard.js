@@ -10,6 +10,7 @@ const form = select("gift-form");
 const recipientChoice = select("recipient");
 const customRecipient = select("custom-recipient");
 const interestsInput = select("interests");
+const budgetInput = select("budget");
 const interestSuggestions = document.querySelectorAll("[data-interest]");
 const surprise = select("surprise-brief");
 const briefStatus = select("brief-status");
@@ -199,7 +200,7 @@ function updateMode() {
   select("demo-controls").hidden = !demoMode.checked;
   select("region-field").hidden = !liveSearch;
   region.disabled = !liveSearch;
-  select("budget-currency").textContent = regionCurrencies[liveSearch ? region.value : "US"];
+  updateBudgetCurrency();
   const showResearchTurns = harnessMode && liveSearch;
   select("harness-setting").hidden = !showResearchTurns;
   select("research-setting").hidden = !showResearchTurns;
@@ -260,12 +261,18 @@ function readBrief() {
     recipient: recipientChoice.value || customRecipient.value.trim(),
     occasion: select("occasion").value,
     interests: interestsInput.value.trim(),
-    budget: select("budget").valueAsNumber,
+    budget: budgetInput.valueAsNumber,
     currency: regionCurrencies[destination.value],
     region: destination.text,
     neededBy: select("neededBy").value || null,
     exclude: select("exclude").value.trim(),
   };
+}
+
+function updateBudgetCurrency() {
+  const currency = regionCurrencies[searchesLive() ? region.value : "US"];
+  select("budget-currency").textContent = currency;
+  budgetInput.min = currency === "USD" ? budgetInput.defaultValue : "1";
 }
 
 function showReport(nextReport) {
@@ -614,13 +621,13 @@ function updateBriefPreview() {
   if (validBrief(brief) && brief.recipient) showSampleBrief(brief);
 }
 
-function fillExampleBrief({ recipient, interests, budget }) {
+function fillExampleBrief({ recipient, occasion, interests, budget }) {
   recipientChoice.value = [...recipientChoice.options].some((option) => option.value === recipient) ? recipient : "";
   if (!recipientChoice.value) customRecipient.value = recipient;
   updateRecipient();
-  select("occasion").value = "Christmas";
+  select("occasion").value = occasion;
   interestsInput.value = interests;
-  select("budget").value = budget;
+  budgetInput.value = budget;
   updateBriefPreview();
 }
 
@@ -639,7 +646,7 @@ for (const button of interestSuggestions) {
 sort.addEventListener("change", render);
 recipientChoice.addEventListener("change", updateRecipient);
 interestsInput.addEventListener("input", updateInterestSuggestions);
-region.addEventListener("change", () => { select("budget-currency").textContent = regionCurrencies[region.value]; });
+region.addEventListener("change", updateBudgetCurrency);
 
 function downloadFile(content, name, type) {
   const url = URL.createObjectURL(new Blob([content], { type }));
