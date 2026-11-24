@@ -24,10 +24,13 @@
         <a href="https://sriaradhyula.github.io/gift-search-agent-skill/">Skill guide</a>
       </nav>
       <div class="header-controls">
-        <label class="demo-switch">
-          <span>Demo mode</span>
-          <input id="demo-mode" type="checkbox" autocomplete="off" role="switch" aria-controls="demo-controls">
-        </label>
+        <fieldset class="mode-picker">
+          <legend class="sr-only">Dashboard mode</legend>
+          <input id="search-mode" class="sr-only" type="radio" name="dashboard-mode" autocomplete="off" checked>
+          <label for="search-mode">Search</label>
+          <input id="demo-mode" class="sr-only" type="radio" name="dashboard-mode" autocomplete="off" aria-controls="demo-controls">
+          <label for="demo-mode">Demo</label>
+        </fieldset>
         <label class="theme-picker">
           <span class="theme-label">Theme</span>
           <select id="theme-choice">
@@ -44,16 +47,28 @@
       <div>
         <h1 id="page-title">Find <em>the gift.</em></h1>
         <p>Find creative White Elephant, Secret Santa, and family gifts. Collaborate with agents to explore ideas and refine your search.</p>
+        <button id="try-demo" class="secondary" type="button" hidden>Try a demo</button>
       </div>
     </section>
-    <div id="demo-controls" class="demo-controls" hidden>
-      <label for="demo-scenario">Scenario</label>
-      <select id="demo-scenario"></select>
-      <button id="run-demo" class="primary" type="button">Run demo</button>
-      <button id="copy-demo-link" class="secondary" type="button">Copy link</button>
+    <section id="demo-controls" class="demo-controls" aria-labelledby="demo-title" hidden>
+      <div class="demo-intro">
+        <div>
+          <h2 id="demo-title">Start here</h2>
+          <p>Use the gift brief for a quick sample shortlist. Start a recorded scenario to watch the agents plan, scout, review, and share their picks.</p>
+        </div>
+        <a href="https://outshift.cisco.com/blog/ai-ml/ai-holiday-shopper-multi-agent-gift-finder" target="_blank" rel="noopener noreferrer">Read the blog <span aria-hidden="true">↗</span></a>
+      </div>
+      <fieldset id="demo-scenarios">
+        <legend>Choose a scenario</legend>
+        <div id="demo-options" class="demo-options"></div>
+      </fieldset>
+      <div class="demo-actions">
+        <button id="run-demo" class="primary" type="button">Start demo</button>
+        <button id="copy-demo-link" class="secondary" type="button">Copy link</button>
+      </div>
       <input id="demo-link" aria-label="Demo link" readonly hidden>
       <span id="demo-link-status" class="sr-only" role="status"></span>
-    </div>
+    </section>
     <div class="workspace">
       <aside class="brief-panel" aria-labelledby="brief-title">
         <div class="brief-heading">
@@ -136,7 +151,7 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.5"/><path d="m15 15 4 4"/></svg>
               <span id="search-label">Find gifts</span>
             </button>
-            <p id="search-availability" class="search-availability" hidden>Turn on Demo mode to try a search.</p>
+            <p id="search-availability" class="search-availability" hidden>Choose Demo to try a sample search.</p>
           </fieldset>
         </form>
         <div id="report-brief" hidden>
@@ -173,7 +188,7 @@
         </section>
         <section id="team-panel" class="team-panel" aria-labelledby="team-title" hidden>
           <div class="team-header">
-            <div><h2 id="team-title">Multi-agent Collaboration</h2><p id="team-mode" aria-live="polite"></p></div>
+            <div><h2 id="team-title" tabindex="-1">Multi-agent Collaboration</h2><p id="team-mode" aria-live="polite"></p></div>
             <div class="team-actions">
               <button id="replay-run" class="secondary" type="button" aria-label="Replay last run" hidden>Replay</button>
               <button id="stop-run" class="secondary" type="button" aria-label="Stop research" hidden>Stop</button>
@@ -218,7 +233,7 @@
           <div id="results-display" hidden>
             <div class="results-heading">
               <div>
-                <h2 id="results-title">Gift shortlist</h2>
+                <h2 id="results-title" tabindex="-1">Gift shortlist</h2>
                 <p id="summary" aria-live="polite"></p>
                 <p id="mode-description"></p>
               </div>
