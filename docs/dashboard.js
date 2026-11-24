@@ -19,7 +19,6 @@ const demoMode = select("demo-mode");
 const harnessChoice = select("run-harness");
 const savedRuns = select("saved-runs");
 const region = select("region");
-const file = select("import-file");
 const dialog = select("gift-detail");
 const demoChoice = select("demo-scenario");
 const gridMount = document.querySelector('meta[name="gift-search-mount"]')?.content;
@@ -205,7 +204,7 @@ function updateMode() {
   select("research-turns").disabled = !showResearchTurns;
   select("search-availability").hidden = liveSearch || demoMode.checked;
   select("search-history").hidden = !historyEnabled || !liveSearch;
-  updateChatHeading();
+  updateChatVisibility();
   updateTeamActions();
   updateSearchButton();
 }
@@ -307,7 +306,6 @@ function setRunning(value) {
   running = value;
   select("brief-fields").disabled = value;
   surprise.disabled = value;
-  select("import-button").disabled = value;
   updateTeamActions();
   updateSearchButton();
   cards.setAttribute("aria-busy", String(value));
@@ -333,8 +331,7 @@ function selectedHarness(id = harnessChoice.value) {
   return harnessOptions.get(id) ?? { id: "claude", label: "Claude Code" };
 }
 
-function updateChatHeading() {
-  select("chat-title").textContent = `Chat with ${selectedHarness().label}`;
+function updateChatVisibility() {
   select("chat-dock").hidden = !searchesLive() || !harnessOptions.get(harnessChoice.value)?.available;
 }
 
@@ -378,7 +375,7 @@ select("load-run").addEventListener("click", async () => {
     openReport(saved.report);
     loadedRun = saved;
     if (harnessOptions.get(saved.harness)?.available) harnessChoice.value = saved.harness;
-    updateChatHeading();
+    updateChatVisibility();
     const harness = selectedHarness(saved.harness);
     restoreTimeline(`Saved ${harness.label} run`, saved.events, harness);
     if (saved.status === "complete") finishTeam(saved.report.gifts.length);
@@ -603,26 +600,6 @@ sort.addEventListener("change", render);
 recipientChoice.addEventListener("change", updateRecipient);
 interestsInput.addEventListener("input", updateInterestSuggestions);
 region.addEventListener("change", () => { select("budget-currency").textContent = regionCurrencies[region.value]; });
-select("import-button").addEventListener("click", () => file.click());
-file.addEventListener("change", async () => {
-  const selected = file.files[0];
-  if (!selected) return;
-  try {
-    if (selected.size > 1024 * 1024) throw new Error("Choose a report smaller than 1 MB.");
-    let imported;
-    try {
-      imported = JSON.parse(await selected.text());
-    } catch {
-      throw new Error("The selected file could not be read as JSON.");
-    }
-    openReport(imported);
-    message();
-  } catch (error) {
-    message(error.message);
-  } finally {
-    file.value = "";
-  }
-});
 
 function downloadFile(content, name, type) {
   const url = URL.createObjectURL(new Blob([content], { type }));
@@ -659,7 +636,7 @@ async function checkLiveAvailability() {
       liveReady &&= Boolean(harnessChoice.value);
       select("research-turns").max = config.maxResearchTurns ?? 5;
       select("additional-turns").max = config.maxResearchTurns ?? 5;
-      harnessChoice.addEventListener("change", updateChatHeading);
+      harnessChoice.addEventListener("change", updateChatVisibility);
       if (harnessChoice.value) enableChat({
         endpoint: liveApi("chat"), getContext: chatContext, getHarness: selectedHarness, onActivity: showTeamEvent,
       });

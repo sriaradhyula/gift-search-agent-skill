@@ -33,13 +33,6 @@
       <div>
         <h1 id="page-title">Watch agents find <em>the gift.</em></h1>
       </div>
-      <div class="intro-actions">
-        <button class="secondary" id="import-button" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4m-4 4 4-4 4 4M4 16v4h16v-4"/></svg>
-          Import results
-        </button>
-        <input id="import-file" type="file" accept=".json,application/json" hidden>
-      </div>
     </section>
     <div id="demo-controls" class="demo-controls" hidden>
       <label for="demo-scenario">Scenario</label>
@@ -228,10 +221,10 @@
     </div>
   </main>
   <aside id="chat-dock" class="chat-dock" aria-label="Agent chat" hidden>
-    <button id="open-claude-chat" class="chat-launcher" type="button" aria-controls="claude-chat" aria-expanded="false">
-      <span id="chat-title">Chat with Claude Code</span>
+    <button id="open-claude-chat" class="chat-launcher" type="button" aria-controls="claude-chat" aria-expanded="true">
+      <span id="chat-title">Chat with Gift Search Agent</span>
     </button>
-    <form id="claude-chat" class="claude-chat" aria-labelledby="chat-title" hidden>
+    <form id="claude-chat" class="claude-chat" aria-labelledby="chat-title">
       <div id="claude-messages" class="claude-messages" role="log" aria-label="Conversation"></div>
       <label class="sr-only" for="claude-question">Message</label>
       <div class="chat-composer">

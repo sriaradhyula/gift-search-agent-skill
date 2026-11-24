@@ -97,9 +97,6 @@ h2 { letter-spacing: -0.035em; }
 .intro > div:first-child { max-width: 60%; }
 .intro h1 { font-size: clamp(1.8rem, 3.35vw, 3rem); }
 .intro h1 em { color: var(--gold); white-space: nowrap; }
-.intro-actions { display: flex; flex-wrap: wrap; gap: 8px; flex: none; }
-.intro-actions .secondary { background: #591123; border-color: #e4ac86; color: var(--cream); }
-.intro-actions .secondary:hover { background: #7b1a35; }
 .primary, .secondary {
   min-height: 42px;
   padding: 10px 15px;
@@ -457,7 +454,6 @@ dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
 }
 
 @media (max-width: 370px) {
-  .intro-actions .secondary { padding-inline: 10px; font-size: .8rem; }
   .header-inner { flex-wrap: wrap; gap: 4px 12px; padding-top: 8px; }
   .site-nav { order: 1; width: 100%; min-height: 32px; }
 }
@@ -487,13 +483,6 @@ dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
     <section class="intro" aria-labelledby="page-title">
       <div>
         <h1 id="page-title">Watch agents find <em>the gift.</em></h1>
-      </div>
-      <div class="intro-actions">
-        <button class="secondary" id="import-button" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4m-4 4 4-4 4 4M4 16v4h16v-4"/></svg>
-          Import results
-        </button>
-        <input id="import-file" type="file" accept=".json,application/json" hidden>
       </div>
     </section>
     <div id="demo-controls" class="demo-controls" hidden>
@@ -683,10 +672,10 @@ dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
     </div>
   </main>
   <aside id="chat-dock" class="chat-dock" aria-label="Agent chat" hidden>
-    <button id="open-claude-chat" class="chat-launcher" type="button" aria-controls="claude-chat" aria-expanded="false">
-      <span id="chat-title">Chat with Claude Code</span>
+    <button id="open-claude-chat" class="chat-launcher" type="button" aria-controls="claude-chat" aria-expanded="true">
+      <span id="chat-title">Chat with Gift Search Agent</span>
     </button>
-    <form id="claude-chat" class="claude-chat" aria-labelledby="chat-title" hidden>
+    <form id="claude-chat" class="claude-chat" aria-labelledby="chat-title">
       <div id="claude-messages" class="claude-messages" role="log" aria-label="Conversation"></div>
       <label class="sr-only" for="claude-question">Message</label>
       <div class="chat-composer">
@@ -1714,7 +1703,6 @@ const demoMode = select("demo-mode");
 const harnessChoice = select("run-harness");
 const savedRuns = select("saved-runs");
 const region = select("region");
-const file = select("import-file");
 const dialog = select("gift-detail");
 const demoChoice = select("demo-scenario");
 const gridMount = document.querySelector('meta[name="gift-search-mount"]')?.content;
@@ -1900,7 +1888,7 @@ function updateMode() {
   select("research-turns").disabled = !showResearchTurns;
   select("search-availability").hidden = liveSearch || demoMode.checked;
   select("search-history").hidden = !historyEnabled || !liveSearch;
-  updateChatHeading();
+  updateChatVisibility();
   updateTeamActions();
   updateSearchButton();
 }
@@ -2002,7 +1990,6 @@ function setRunning(value) {
   running = value;
   select("brief-fields").disabled = value;
   surprise.disabled = value;
-  select("import-button").disabled = value;
   updateTeamActions();
   updateSearchButton();
   cards.setAttribute("aria-busy", String(value));
@@ -2028,8 +2015,7 @@ function selectedHarness(id = harnessChoice.value) {
   return harnessOptions.get(id) ?? { id: "claude", label: "Claude Code" };
 }
 
-function updateChatHeading() {
-  select("chat-title").textContent = `Chat with ${selectedHarness().label}`;
+function updateChatVisibility() {
   select("chat-dock").hidden = !searchesLive() || !harnessOptions.get(harnessChoice.value)?.available;
 }
 
@@ -2073,7 +2059,7 @@ select("load-run").addEventListener("click", async () => {
     openReport(saved.report);
     loadedRun = saved;
     if (harnessOptions.get(saved.harness)?.available) harnessChoice.value = saved.harness;
-    updateChatHeading();
+    updateChatVisibility();
     const harness = selectedHarness(saved.harness);
     restoreTimeline(`Saved ${harness.label} run`, saved.events, harness);
     if (saved.status === "complete") finishTeam(saved.report.gifts.length);
@@ -2298,26 +2284,6 @@ sort.addEventListener("change", render);
 recipientChoice.addEventListener("change", updateRecipient);
 interestsInput.addEventListener("input", updateInterestSuggestions);
 region.addEventListener("change", () => { select("budget-currency").textContent = regionCurrencies[region.value]; });
-select("import-button").addEventListener("click", () => file.click());
-file.addEventListener("change", async () => {
-  const selected = file.files[0];
-  if (!selected) return;
-  try {
-    if (selected.size > 1024 * 1024) throw new Error("Choose a report smaller than 1 MB.");
-    let imported;
-    try {
-      imported = JSON.parse(await selected.text());
-    } catch {
-      throw new Error("The selected file could not be read as JSON.");
-    }
-    openReport(imported);
-    message();
-  } catch (error) {
-    message(error.message);
-  } finally {
-    file.value = "";
-  }
-});
 
 function downloadFile(content, name, type) {
   const url = URL.createObjectURL(new Blob([content], { type }));
@@ -2354,7 +2320,7 @@ async function checkLiveAvailability() {
       liveReady &&= Boolean(harnessChoice.value);
       select("research-turns").max = config.maxResearchTurns ?? 5;
       select("additional-turns").max = config.maxResearchTurns ?? 5;
-      harnessChoice.addEventListener("change", updateChatHeading);
+      harnessChoice.addEventListener("change", updateChatVisibility);
       if (harnessChoice.value) enableChat({
         endpoint: liveApi("chat"), getContext: chatContext, getHarness: selectedHarness, onActivity: showTeamEvent,
       });
