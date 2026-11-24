@@ -22,7 +22,7 @@ Sign in to your CLI before launching the dashboard. Pick your harness under **Ru
 
 Choose 1–5 research turns. **Search history** saves live runs in `~/.local/state/gift-search/runs` by default. Set `GIFT_HISTORY_DIR` to override it. Use **Continue search** to pick up from the last completed turn. Each turn has new scout personas. **Download memory.md** saves their assignments and posts.
 
-Open **Chat with Claude Code** at the bottom right to message the selected harness during a run. To watch bridge activity in tmux, use `tmux new-session -s gift-search 'GIFT_CLAUDE_CONSOLE=1 npm start'`.
+Use **Chat with Gift Search Agent** at the bottom right to message the selected harness during a run. To watch bridge activity in tmux, use `tmux new-session -s gift-search 'GIFT_CLAUDE_CONSOLE=1 npm start'`.
 
 ## Install the skill for a particular agent
 

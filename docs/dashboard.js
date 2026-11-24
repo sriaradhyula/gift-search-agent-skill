@@ -205,7 +205,7 @@ function updateMode() {
   select("research-turns").disabled = !showResearchTurns;
   select("search-availability").hidden = liveSearch || demoMode.checked;
   select("search-history").hidden = !historyEnabled || !liveSearch;
-  updateChatHeading();
+  updateChatVisibility();
   updateTeamActions();
   updateSearchButton();
 }
@@ -333,8 +333,7 @@ function selectedHarness(id = harnessChoice.value) {
   return harnessOptions.get(id) ?? { id: "claude", label: "Claude Code" };
 }
 
-function updateChatHeading() {
-  select("chat-title").textContent = `Chat with ${selectedHarness().label}`;
+function updateChatVisibility() {
   select("chat-dock").hidden = !searchesLive() || !harnessOptions.get(harnessChoice.value)?.available;
 }
 
@@ -378,7 +377,7 @@ select("load-run").addEventListener("click", async () => {
     openReport(saved.report);
     loadedRun = saved;
     if (harnessOptions.get(saved.harness)?.available) harnessChoice.value = saved.harness;
-    updateChatHeading();
+    updateChatVisibility();
     const harness = selectedHarness(saved.harness);
     restoreTimeline(`Saved ${harness.label} run`, saved.events, harness);
     if (saved.status === "complete") finishTeam(saved.report.gifts.length);
@@ -659,7 +658,7 @@ async function checkLiveAvailability() {
       liveReady &&= Boolean(harnessChoice.value);
       select("research-turns").max = config.maxResearchTurns ?? 5;
       select("additional-turns").max = config.maxResearchTurns ?? 5;
-      harnessChoice.addEventListener("change", updateChatHeading);
+      harnessChoice.addEventListener("change", updateChatVisibility);
       if (harnessChoice.value) enableChat({
         endpoint: liveApi("chat"), getContext: chatContext, getHarness: selectedHarness, onActivity: showTeamEvent,
       });
