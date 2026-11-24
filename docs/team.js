@@ -158,14 +158,20 @@ function setTeamDetails(expanded) {
 
 teamToggle.addEventListener("click", () => setTeamDetails(teamDetails.hidden));
 
+let timelineIsDemo;
+
+export function showTimelineForMode(demo) {
+  teamPanel.hidden = boardPanel.hidden = timelineIsDemo !== demo;
+}
+
 export function resetTeam(mode, { expand = false, demo = false, consoleLabel = "Claude console" } = {}) {
-  teamPanel.hidden = !expand;
+  timelineIsDemo = expand ? demo : undefined;
+  showTimelineForMode(demo);
   teamMode.textContent = mode;
   turnLabel.hidden = true;
   teamHistory.length = 0;
   memory.length = 0;
   teamLog.replaceChildren();
-  boardPanel.hidden = !expand;
   memoryAll.checked = false;
   updateMemoryView();
   setMemoryStatus("active", "Recording");
@@ -326,11 +332,23 @@ export async function consumeEvents(response, receive) {
   }
 }
 
+const demoPauses = {
+  "planning-start": 850,
+  "team-plan": 450,
+  "turn-start": 400,
+  "scout-start": 550,
+  "scout-handoff": 800,
+  "review-start": 1000,
+  "review-complete": 650,
+  "turn-complete": 700,
+};
+
 export async function replayTimeline(events, mode, count, { demo = false, consoleLabel, completed = true } = {}) {
   resetTeam(mode, { expand: true, demo, consoleLabel });
   for (const event of events) {
     showTeamEvent(event);
-    const delay = event.kind === "board-post" || event.kind.startsWith("claude-") ? 75 : 330;
+    const replayDelay = event.kind === "board-post" || event.kind.startsWith("claude-") ? 75 : 330;
+    const delay = demo ? (demoPauses[event.kind] ?? 180) : replayDelay;
     await new Promise((done) => setTimeout(done, delay));
   }
   if (completed) finishTeam(count);

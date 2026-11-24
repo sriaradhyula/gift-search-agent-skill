@@ -4,7 +4,7 @@ Find creative White Elephant, Secret Santa, and family gifts. Collaborate with a
 
 ## Try it
 
-**[Try the chocolate demo](https://sriaradhyula.github.io/gift-search-agent-skill/dashboard.html?demo=chocolate)**. In the browser, select **Run demo** to watch two rounds of research. No account or API key required.
+**[Try the chocolate demo](https://sriaradhyula.github.io/gift-search-agent-skill/dashboard.html?demo=chocolate)**. Select **Start demo** to watch two rounds of research. No account or API key required.
 
 ## Run a live search
 

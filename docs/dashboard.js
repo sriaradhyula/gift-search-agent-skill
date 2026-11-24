@@ -1,7 +1,7 @@
 import { examples, runSample, sampleImage } from "./sample.js";
 import { createDemoRun, demoScenarios } from "./demos.js";
 import { formatMoney, giftThumbnailKey, productUrl, shoppingThumbnail, usdPriceBand, usdPriceBandLabels, usdPriceComparisonCap, validBrief, validateReport } from "./report.js";
-import { consumeEvents, finishTeam, recentResearchNotes, replayTimeline, researchMemory, resetTeam, showTeamEvent, stopTeam } from "./team.js";
+import { consumeEvents, finishTeam, recentResearchNotes, replayTimeline, researchMemory, resetTeam, showTeamEvent, showTimelineForMode, stopTeam } from "./team.js";
 import { enableChat } from "./chat.js";
 import { enableShareResults } from "./share.js";
 
@@ -17,7 +17,10 @@ const surprise = select("surprise-brief");
 const briefStatus = select("brief-status");
 const cards = select("cards");
 const sort = select("sort");
+const searchMode = select("search-mode");
 const demoMode = select("demo-mode");
+const demoOptions = select("demo-options");
+const runDemo = select("run-demo");
 const harnessChoice = select("run-harness");
 const savedRuns = select("saved-runs");
 const region = select("region");
@@ -25,7 +28,6 @@ const dialog = select("gift-detail");
 const linkInspection = select("link-inspection");
 const refineDialog = select("refine-dialog");
 const refineForm = select("refine-form");
-const demoChoice = select("demo-scenario");
 const gridMount = document.querySelector('meta[name="gift-search-mount"]')?.content;
 const wipedSessionKey = "gift-search-session-wiped";
 const liveApi = (path) => `${gridMount ?? "."}/api/${path}`;
@@ -41,6 +43,7 @@ const exampleBriefs = Object.values(examples);
 
 let liveReady = false;
 let report = runSample(readBrief());
+let reportVisible = false;
 let running = false;
 let harnessMode = false;
 let historyEnabled = false;
@@ -212,7 +215,8 @@ function render() {
   const { mode, brief, gifts, notes, checkedOn, discovery, leads = [] } = report;
   select("mode-description").textContent = checkedOn
     ? `Checked ${checkedOn} · Prices can change` : modeDescriptions[mode];
-  select("results-display").hidden = mode === "sample" && !demoMode.checked && !form.hidden;
+  const matchesMode = (mode === "sample") === demoMode.checked;
+  select("results-display").hidden = !reportVisible || (!matchesMode && !form.hidden);
   const budget = brief.budget === null ? "" : ` · Up to ${formatMoney(brief.budget, brief.currency)} ${brief.currency}`;
   const details = [brief.recipient, brief.occasion].filter(Boolean).join(" · ");
   const resultType = mode === "live" ? (gifts.length === 1 ? "verified gift" : "verified gifts")
@@ -259,6 +263,7 @@ function updateSearchButton() {
 function updateMode() {
   const liveSearch = searchesLive();
   select("demo-controls").hidden = !demoMode.checked;
+  select("try-demo").hidden = liveSearch || demoMode.checked || form.hidden;
   select("region-field").hidden = !liveSearch;
   region.disabled = !liveSearch;
   updateBudgetCurrency();
@@ -356,6 +361,7 @@ function updateBudgetLimit() {
 
 function showReport(nextReport, runId) {
   report = nextReport;
+  reportVisible = true;
   displayedRunId = runId;
   sort.value = "recommended";
   render();
@@ -385,6 +391,7 @@ function showReportBrief(brief, focus) {
   }));
   form.hidden = true;
   surprise.hidden = true;
+  select("try-demo").hidden = true;
   briefStatus.textContent = "";
   select("report-brief").hidden = false;
 }
@@ -405,12 +412,15 @@ function showBriefForm() {
   loadedRun = undefined;
   select("resume-run").hidden = true;
   select("report-brief").hidden = true;
+  updateMode();
 }
 
 select("new-search").addEventListener("click", () => {
   showBriefForm();
   message();
-  showSampleBrief(readBrief());
+  reportVisible = false;
+  resetTeam(teamIntroduction);
+  render();
   select("recipient").focus();
 });
 
@@ -444,8 +454,8 @@ function setRunning(value) {
 }
 
 function updateTeamActions() {
-  demoMode.disabled = running || loadingRun;
-  for (const id of ["demo-scenario", "run-demo", "replay-run"]) select(id).disabled = running;
+  searchMode.disabled = demoMode.disabled = running || loadingRun;
+  select("demo-scenarios").disabled = runDemo.disabled = select("replay-run").disabled = running;
   select("replay-run").hidden = demoMode.checked || !lastRun?.events.length;
   select("stop-run").hidden = !runAbort;
   savedRuns.disabled = running || loadingRun || !savedRuns.options.length;
@@ -546,7 +556,10 @@ form.addEventListener("submit", async (event) => {
     return;
   }
   if (!searchesLive()) {
-    if (demoMode.checked) showSampleBrief(brief);
+    if (demoMode.checked) {
+      showSampleBrief(brief);
+      focusResultHeading("results-title");
+    }
     return;
   }
   const researchTurns = select("research-turns").valueAsNumber;
@@ -624,16 +637,39 @@ select("replay-run").addEventListener("click", async () => {
   }
 });
 
-demoChoice.replaceChildren(...demoScenarios.map(({ id, title }) => new Option(title, id)));
-demoMode.addEventListener("change", () => {
+const linkedDemo = demoScenarios.find(({ id }) => id === new URLSearchParams(location.search).get("demo"));
+demoOptions.replaceChildren(...demoScenarios.map(({ id, title }) => {
+  const input = element("input", "sr-only");
+  input.type = "radio";
+  input.name = "demo-scenario";
+  input.id = `demo-${id}`;
+  input.value = id;
+  input.checked = id === (linkedDemo ?? demoScenarios[0]).id;
+  const label = element("label", "", title);
+  label.htmlFor = input.id;
+  const option = element("div");
+  option.append(input, label);
+  return option;
+}));
+const selectedScenario = () => demoOptions.querySelector("input:checked");
+
+function changeMode() {
   message();
   briefStatus.textContent = "";
   updateMode();
-  if (!demoMode.checked && report.mode === "sample" && !form.hidden) resetTeam(teamIntroduction);
+  showTimelineForMode(demoMode.checked);
   render();
+}
+
+demoMode.addEventListener("change", changeMode);
+searchMode.addEventListener("change", changeMode);
+select("try-demo").addEventListener("click", () => {
+  demoMode.checked = true;
+  changeMode();
+  selectedScenario().focus();
 });
 
-demoChoice.addEventListener("change", () => {
+demoOptions.addEventListener("change", () => {
   select("demo-link").hidden = true;
   select("demo-link-status").textContent = "";
 });
@@ -645,7 +681,7 @@ copyDemoLink.addEventListener("click", async () => {
   if (gridMount) url.pathname = gridMount;
   url.search = "";
   url.hash = "";
-  url.searchParams.set("demo", demoChoice.value);
+  url.searchParams.set("demo", selectedScenario().value);
   const status = select("demo-link-status");
   try {
     await navigator.clipboard.writeText(url.href);
@@ -662,22 +698,33 @@ copyDemoLink.addEventListener("click", async () => {
   }
 });
 
-select("run-demo").addEventListener("click", async () => {
+function focusResultHeading(id) {
+  const heading = select(id);
+  heading.focus({ preventScroll: true });
+  const { top, bottom } = heading.getBoundingClientRect();
+  if (top < 0 || bottom > window.innerHeight) heading.scrollIntoView({ block: "start" });
+}
+
+runDemo.addEventListener("click", async () => {
   if (running || !demoMode.checked) return;
-  const scenario = demoScenarios.find(({ id }) => id === demoChoice.value);
-  if (!scenario) return;
+  const scenario = demoScenarios.find(({ id }) => id === selectedScenario().value);
   showBriefForm();
   priceComparison.checked = false;
   updateBudgetLimit();
   fillExampleBrief(scenario.brief);
-  message();
+  reportVisible = false;
+  render();
   setRunning(true);
+  runDemo.textContent = "Playing…";
   try {
     const { events, report } = createDemoRun(scenario);
-    await replayTimeline(events, `Demo · ${scenario.title}`, report.gifts.length, { demo: true });
+    const playback = replayTimeline(events, `Demo · ${scenario.title}`, report.gifts.length, { demo: true });
+    focusResultHeading("team-title");
+    await playback;
     showReport(report);
   } finally {
     setRunning(false);
+    runDemo.textContent = "Start demo";
   }
 });
 
@@ -768,13 +815,10 @@ function updateInterestSuggestions() {
   }
 }
 
-function updateBriefPreview() {
+function clearBriefFeedback() {
   updateInterestSuggestions();
   message();
   briefStatus.textContent = "";
-  if (!demoMode.checked) return;
-  const brief = readBrief();
-  if (validBrief(brief) && brief.recipient) showSampleBrief(brief);
 }
 
 function fillExampleBrief({ recipient, occasion, interests, budget }) {
@@ -785,7 +829,7 @@ function fillExampleBrief({ recipient, occasion, interests, budget }) {
   interestsInput.value = interests;
   if (priceComparison.checked) budgetBeforeComparison = String(budget);
   else budgetInput.value = budget;
-  updateBriefPreview();
+  clearBriefFeedback();
 }
 
 surprise.addEventListener("click", () => {
@@ -796,7 +840,7 @@ surprise.addEventListener("click", () => {
 for (const button of interestSuggestions) {
   button.addEventListener("click", () => {
     interestsInput.value = button.dataset.interest;
-    updateBriefPreview();
+    clearBriefFeedback();
   });
 }
 
@@ -806,7 +850,7 @@ interestsInput.addEventListener("input", updateInterestSuggestions);
 region.addEventListener("change", updateBudgetCurrency);
 priceComparison.addEventListener("change", () => {
   updateBudgetLimit();
-  updateBriefPreview();
+  clearBriefFeedback();
 });
 
 function downloadFile(content, name, type) {
@@ -877,10 +921,8 @@ if (gridMount) {
     // Browser storage is optional.
   }
 }
-const linkedDemo = demoScenarios.find(({ id }) => id === new URLSearchParams(location.search).get("demo"));
 if (linkedDemo && !form.hidden) {
   demoMode.checked = true;
-  demoChoice.value = linkedDemo.id;
   fillExampleBrief(linkedDemo.brief);
 }
 const liveAvailability = checkLiveAvailability().finally(updateMode);

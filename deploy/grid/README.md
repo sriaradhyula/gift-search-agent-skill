@@ -17,7 +17,7 @@ The iframe uses `/apps/gift-search` as its canonical browser URL. Grid forwards 
 
 ## Link to a demo
 
-After deployment, open `/apps/gift-search?demo=chocolate` on your Grid instance while signed in. The link selects **Chocolate under $55**. Select **Run demo** to start playback. Use **Copy link** to share the current selection.
+After deployment, open `/apps/gift-search?demo=chocolate` on your Grid instance while signed in. The link selects **Chocolate under $55**. Select **Start demo** to start playback. Use **Copy link** to share the current selection.
 
 The supported IDs are `white-elephant`, `chocolate`, `coffee`, `outdoors`, and `creative`. The same query links work in the standalone site and local dashboard. Links contain the sample scenario ID. Saved live runs are stored by the user’s local server.
 

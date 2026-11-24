@@ -124,15 +124,18 @@ h2 { letter-spacing: -0.035em; }
 .holiday-dashboard .site-header { background: var(--warm-paper); border-color: var(--warm-line); }
 .holiday-dashboard .brand-mark { background: var(--cranberry); }
 .holiday-dashboard .site-nav a[aria-current="page"] { color: var(--cranberry-dark); border-bottom-color: var(--cranberry); }
-.demo-switch { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; font-size: .83rem; font-weight: 680; }
-.demo-switch input {
-  appearance: none; position: relative; width: 32px; height: 19px; margin: 0;
-  border: 1px solid light-dark(#8d7966, #917760); border-radius: 20px; background: light-dark(#f3eadd, #3b3026); cursor: pointer;
+.mode-picker {
+  position: relative; display: inline-flex; align-items: center; gap: 2px; padding: 2px;
+  border: 1px solid var(--warm-line); border-radius: 10px; background: var(--warm-panel);
 }
-.demo-switch input::before { content: ""; position: absolute; inset: 3px auto auto 3px; width: 11px; height: 11px; border-radius: 50%; background: light-dark(#725b47, #e0b99a); }
-.demo-switch input:checked { border-color: var(--green); background: var(--action); }
-.demo-switch input:checked::before { inset-inline-start: 16px; background: white; }
-.demo-switch input:disabled { opacity: .55; cursor: default; }
+.mode-picker label {
+  display: inline-flex; align-items: center; min-height: 32px; padding-inline: 10px;
+  border-radius: 7px; color: var(--muted); font-size: .81rem; font-weight: 680; cursor: pointer;
+}
+.mode-picker input:not(:checked):not(:disabled) + label:hover { color: var(--ink); background: var(--wash); }
+.mode-picker input:checked + label { color: white; background: var(--action); }
+.mode-picker input:disabled + label { cursor: default; opacity: .65; }
+:is(.mode-picker, .demo-options) input:focus-visible + label { outline: 2px solid var(--focus); outline-offset: 2px; }
 .dashboard { flex: 1; padding-block: 34px 46px; }
 .intro {
   color: var(--cream);
@@ -154,6 +157,8 @@ h2 { letter-spacing: -0.035em; }
 .intro h1 { font-size: clamp(1.8rem, 3.35vw, 3rem); }
 .intro h1 em { color: var(--gold); white-space: nowrap; }
 .intro p { max-width: 50ch; margin-top: 7px; font-size: .9rem; line-height: 1.4; }
+.intro #try-demo { margin-top: 12px; min-height: 36px; padding: 5px 12px; background: var(--gold); color: #472a19; border-color: var(--gold); }
+.intro #try-demo:hover { background: var(--cream); }
 .primary, .secondary {
   min-height: 42px;
   padding: 10px 15px;
@@ -247,17 +252,26 @@ fieldset { min-inline-size: 0; margin: 0; padding: 0; border: 0; }
 .team-toggle[aria-expanded="true"]::after { transform: translateY(2px) rotate(225deg); }
 .team-actions { display: flex; flex-wrap: wrap; gap: 7px; }
 .demo-controls {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
-  margin-bottom: 16px; padding: 10px 12px;
-  border: 1px solid var(--warm-line); border-radius: 12px; background: var(--warm-panel);
+  display: grid; gap: 14px; margin-bottom: 16px; padding: 16px 18px;
+  border: 1px solid var(--warm-line); border-radius: var(--radius); background: var(--warm-paper);
 }
-.demo-controls label { font-size: .81rem; font-weight: 700; }
-.demo-controls select {
-  min-width: 0; max-width: 100%; min-height: 36px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 8px;
-  color: var(--ink); background: var(--input); font-size: .83rem;
+.demo-intro { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 7px 18px; }
+.demo-intro h2 { color: var(--green); font-size: 1.14rem; }
+.demo-intro p { margin-top: 4px; color: var(--muted); font-size: .85rem; line-height: 1.45; }
+.demo-intro a { font-size: .84rem; font-weight: 650; text-underline-offset: 3px; }
+.demo-controls legend { margin-bottom: 6px; padding: 0; font-size: .8rem; font-weight: 700; }
+.demo-options, .demo-actions { display: flex; flex-wrap: wrap; gap: 7px; }
+.demo-options > div { position: relative; max-width: 100%; }
+.demo-options label {
+  display: inline-flex; align-items: center; min-height: 36px; padding: 5px 11px;
+  border: 1px solid var(--warm-line); border-radius: 8px; background: var(--warm-panel);
+  color: var(--ink); font-size: .81rem; font-weight: 650; cursor: pointer;
 }
-.demo-controls button { min-height: 36px; padding: 5px 10px; }
-.demo-controls input { flex-basis: 100%; min-width: 0; padding: 8px; border: 1px solid var(--line); border-radius: 8px; }
+.demo-options input:not(:disabled) + label:hover { border-color: var(--green); }
+.demo-options input:checked + label { border-color: var(--green); background: var(--wash); color: var(--green); }
+.demo-options input:disabled + label { cursor: default; opacity: .65; }
+.demo-actions button { min-height: 38px; padding: 5px 12px; }
+#demo-link { width: 100%; min-width: 0; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--input); color: var(--ink); }
 .team-turn { margin: 14px 0 0; color: var(--gold); font-size: .8rem; font-weight: 700; }
 .team-graph { max-width: 600px; margin: 20px auto 0; }
 .team-parallel { display: grid; grid-template-columns: repeat(var(--scout-count, 2), minmax(0, 1fr)); gap: 13px; }
@@ -379,7 +393,6 @@ body:has(.chat-dock:not([hidden])) .dashboard { padding-bottom: 76px; }
 }
 @media (max-width: 460px) {
   .team-panel { padding: 14px; }
-  .demo-controls label { flex-basis: 100%; }
   .team-parallel { gap: 6px; }
   .team-node { padding-inline: 5px; }
 }
@@ -534,7 +547,7 @@ dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
   .site-nav { order: 1; width: 100%; min-height: 34px; }
   .header-controls { gap: 8px; }
   .theme-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-  .demo-switch { gap: 5px; font-size: .75rem; }
+  .mode-picker label { padding-inline: 7px; font-size: .77rem; }
 }
 
 @media (max-width: 420px) {
@@ -558,10 +571,13 @@ dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
         <a href="https://sriaradhyula.github.io/gift-search-agent-skill/">Skill guide</a>
       </nav>
       <div class="header-controls">
-        <label class="demo-switch">
-          <span>Demo mode</span>
-          <input id="demo-mode" type="checkbox" autocomplete="off" role="switch" aria-controls="demo-controls">
-        </label>
+        <fieldset class="mode-picker">
+          <legend class="sr-only">Dashboard mode</legend>
+          <input id="search-mode" class="sr-only" type="radio" name="dashboard-mode" autocomplete="off" checked>
+          <label for="search-mode">Search</label>
+          <input id="demo-mode" class="sr-only" type="radio" name="dashboard-mode" autocomplete="off" aria-controls="demo-controls">
+          <label for="demo-mode">Demo</label>
+        </fieldset>
         <label class="theme-picker">
           <span class="theme-label">Theme</span>
           <select id="theme-choice">
@@ -578,16 +594,28 @@ dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
       <div>
         <h1 id="page-title">Find <em>the gift.</em></h1>
         <p>Find creative White Elephant, Secret Santa, and family gifts. Collaborate with agents to explore ideas and refine your search.</p>
+        <button id="try-demo" class="secondary" type="button" hidden>Try a demo</button>
       </div>
     </section>
-    <div id="demo-controls" class="demo-controls" hidden>
-      <label for="demo-scenario">Scenario</label>
-      <select id="demo-scenario"></select>
-      <button id="run-demo" class="primary" type="button">Run demo</button>
-      <button id="copy-demo-link" class="secondary" type="button">Copy link</button>
+    <section id="demo-controls" class="demo-controls" aria-labelledby="demo-title" hidden>
+      <div class="demo-intro">
+        <div>
+          <h2 id="demo-title">Start here</h2>
+          <p>Use the gift brief for a quick sample shortlist. Start a recorded scenario to watch the agents plan, scout, review, and share their picks.</p>
+        </div>
+        <a href="https://outshift.cisco.com/blog/ai-ml/ai-holiday-shopper-multi-agent-gift-finder" target="_blank" rel="noopener noreferrer">Read the blog <span aria-hidden="true">↗</span></a>
+      </div>
+      <fieldset id="demo-scenarios">
+        <legend>Choose a scenario</legend>
+        <div id="demo-options" class="demo-options"></div>
+      </fieldset>
+      <div class="demo-actions">
+        <button id="run-demo" class="primary" type="button">Start demo</button>
+        <button id="copy-demo-link" class="secondary" type="button">Copy link</button>
+      </div>
       <input id="demo-link" aria-label="Demo link" readonly hidden>
       <span id="demo-link-status" class="sr-only" role="status"></span>
-    </div>
+    </section>
     <div class="workspace">
       <aside class="brief-panel" aria-labelledby="brief-title">
         <div class="brief-heading">
@@ -670,7 +698,7 @@ dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.5"/><path d="m15 15 4 4"/></svg>
               <span id="search-label">Find gifts</span>
             </button>
-            <p id="search-availability" class="search-availability" hidden>Turn on Demo mode to try a search.</p>
+            <p id="search-availability" class="search-availability" hidden>Choose Demo to try a sample search.</p>
           </fieldset>
         </form>
         <div id="report-brief" hidden>
@@ -707,7 +735,7 @@ dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
         </section>
         <section id="team-panel" class="team-panel" aria-labelledby="team-title" hidden>
           <div class="team-header">
-            <div><h2 id="team-title">Multi-agent Collaboration</h2><p id="team-mode" aria-live="polite"></p></div>
+            <div><h2 id="team-title" tabindex="-1">Multi-agent Collaboration</h2><p id="team-mode" aria-live="polite"></p></div>
             <div class="team-actions">
               <button id="replay-run" class="secondary" type="button" aria-label="Replay last run" hidden>Replay</button>
               <button id="stop-run" class="secondary" type="button" aria-label="Stop research" hidden>Stop</button>
@@ -752,7 +780,7 @@ dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
           <div id="results-display" hidden>
             <div class="results-heading">
               <div>
-                <h2 id="results-title">Gift shortlist</h2>
+                <h2 id="results-title" tabindex="-1">Gift shortlist</h2>
                 <p id="summary" aria-live="polite"></p>
                 <p id="mode-description"></p>
               </div>
@@ -1465,14 +1493,20 @@ function setTeamDetails(expanded) {
 
 teamToggle.addEventListener("click", () => setTeamDetails(teamDetails.hidden));
 
+let timelineIsDemo;
+
+function showTimelineForMode(demo) {
+  teamPanel.hidden = boardPanel.hidden = timelineIsDemo !== demo;
+}
+
 function resetTeam(mode, { expand = false, demo = false, consoleLabel = "Claude console" } = {}) {
-  teamPanel.hidden = !expand;
+  timelineIsDemo = expand ? demo : undefined;
+  showTimelineForMode(demo);
   teamMode.textContent = mode;
   turnLabel.hidden = true;
   teamHistory.length = 0;
   memory.length = 0;
   teamLog.replaceChildren();
-  boardPanel.hidden = !expand;
   memoryAll.checked = false;
   updateMemoryView();
   setMemoryStatus("active", "Recording");
@@ -1633,11 +1667,23 @@ async function consumeEvents(response, receive) {
   }
 }
 
+const demoPauses = {
+  "planning-start": 850,
+  "team-plan": 450,
+  "turn-start": 400,
+  "scout-start": 550,
+  "scout-handoff": 800,
+  "review-start": 1000,
+  "review-complete": 650,
+  "turn-complete": 700,
+};
+
 async function replayTimeline(events, mode, count, { demo = false, consoleLabel, completed = true } = {}) {
   resetTeam(mode, { expand: true, demo, consoleLabel });
   for (const event of events) {
     showTeamEvent(event);
-    const delay = event.kind === "board-post" || event.kind.startsWith("claude-") ? 75 : 330;
+    const replayDelay = event.kind === "board-post" || event.kind.startsWith("claude-") ? 75 : 330;
+    const delay = demo ? (demoPauses[event.kind] ?? 180) : replayDelay;
     await new Promise((done) => setTimeout(done, delay));
   }
   if (completed) finishTeam(count);
@@ -1983,7 +2029,10 @@ const surprise = select("surprise-brief");
 const briefStatus = select("brief-status");
 const cards = select("cards");
 const sort = select("sort");
+const searchMode = select("search-mode");
 const demoMode = select("demo-mode");
+const demoOptions = select("demo-options");
+const runDemo = select("run-demo");
 const harnessChoice = select("run-harness");
 const savedRuns = select("saved-runs");
 const region = select("region");
@@ -1991,7 +2040,6 @@ const dialog = select("gift-detail");
 const linkInspection = select("link-inspection");
 const refineDialog = select("refine-dialog");
 const refineForm = select("refine-form");
-const demoChoice = select("demo-scenario");
 const gridMount = document.querySelector('meta[name="gift-search-mount"]')?.content;
 const wipedSessionKey = "gift-search-session-wiped";
 const liveApi = (path) => `${gridMount ?? "."}/api/${path}`;
@@ -2007,6 +2055,7 @@ const exampleBriefs = Object.values(examples);
 
 let liveReady = false;
 let report = runSample(readBrief());
+let reportVisible = false;
 let running = false;
 let harnessMode = false;
 let historyEnabled = false;
@@ -2178,7 +2227,8 @@ function render() {
   const { mode, brief, gifts, notes, checkedOn, discovery, leads = [] } = report;
   select("mode-description").textContent = checkedOn
     ? `Checked ${checkedOn} · Prices can change` : modeDescriptions[mode];
-  select("results-display").hidden = mode === "sample" && !demoMode.checked && !form.hidden;
+  const matchesMode = (mode === "sample") === demoMode.checked;
+  select("results-display").hidden = !reportVisible || (!matchesMode && !form.hidden);
   const budget = brief.budget === null ? "" : ` · Up to ${formatMoney(brief.budget, brief.currency)} ${brief.currency}`;
   const details = [brief.recipient, brief.occasion].filter(Boolean).join(" · ");
   const resultType = mode === "live" ? (gifts.length === 1 ? "verified gift" : "verified gifts")
@@ -2225,6 +2275,7 @@ function updateSearchButton() {
 function updateMode() {
   const liveSearch = searchesLive();
   select("demo-controls").hidden = !demoMode.checked;
+  select("try-demo").hidden = liveSearch || demoMode.checked || form.hidden;
   select("region-field").hidden = !liveSearch;
   region.disabled = !liveSearch;
   updateBudgetCurrency();
@@ -2322,6 +2373,7 @@ function updateBudgetLimit() {
 
 function showReport(nextReport, runId) {
   report = nextReport;
+  reportVisible = true;
   displayedRunId = runId;
   sort.value = "recommended";
   render();
@@ -2351,6 +2403,7 @@ function showReportBrief(brief, focus) {
   }));
   form.hidden = true;
   surprise.hidden = true;
+  select("try-demo").hidden = true;
   briefStatus.textContent = "";
   select("report-brief").hidden = false;
 }
@@ -2371,12 +2424,15 @@ function showBriefForm() {
   loadedRun = undefined;
   select("resume-run").hidden = true;
   select("report-brief").hidden = true;
+  updateMode();
 }
 
 select("new-search").addEventListener("click", () => {
   showBriefForm();
   message();
-  showSampleBrief(readBrief());
+  reportVisible = false;
+  resetTeam(teamIntroduction);
+  render();
   select("recipient").focus();
 });
 
@@ -2410,8 +2466,8 @@ function setRunning(value) {
 }
 
 function updateTeamActions() {
-  demoMode.disabled = running || loadingRun;
-  for (const id of ["demo-scenario", "run-demo", "replay-run"]) select(id).disabled = running;
+  searchMode.disabled = demoMode.disabled = running || loadingRun;
+  select("demo-scenarios").disabled = runDemo.disabled = select("replay-run").disabled = running;
   select("replay-run").hidden = demoMode.checked || !lastRun?.events.length;
   select("stop-run").hidden = !runAbort;
   savedRuns.disabled = running || loadingRun || !savedRuns.options.length;
@@ -2512,7 +2568,10 @@ form.addEventListener("submit", async (event) => {
     return;
   }
   if (!searchesLive()) {
-    if (demoMode.checked) showSampleBrief(brief);
+    if (demoMode.checked) {
+      showSampleBrief(brief);
+      focusResultHeading("results-title");
+    }
     return;
   }
   const researchTurns = select("research-turns").valueAsNumber;
@@ -2590,16 +2649,39 @@ select("replay-run").addEventListener("click", async () => {
   }
 });
 
-demoChoice.replaceChildren(...demoScenarios.map(({ id, title }) => new Option(title, id)));
-demoMode.addEventListener("change", () => {
+const linkedDemo = demoScenarios.find(({ id }) => id === new URLSearchParams(location.search).get("demo"));
+demoOptions.replaceChildren(...demoScenarios.map(({ id, title }) => {
+  const input = element("input", "sr-only");
+  input.type = "radio";
+  input.name = "demo-scenario";
+  input.id = `demo-${id}`;
+  input.value = id;
+  input.checked = id === (linkedDemo ?? demoScenarios[0]).id;
+  const label = element("label", "", title);
+  label.htmlFor = input.id;
+  const option = element("div");
+  option.append(input, label);
+  return option;
+}));
+const selectedScenario = () => demoOptions.querySelector("input:checked");
+
+function changeMode() {
   message();
   briefStatus.textContent = "";
   updateMode();
-  if (!demoMode.checked && report.mode === "sample" && !form.hidden) resetTeam(teamIntroduction);
+  showTimelineForMode(demoMode.checked);
   render();
+}
+
+demoMode.addEventListener("change", changeMode);
+searchMode.addEventListener("change", changeMode);
+select("try-demo").addEventListener("click", () => {
+  demoMode.checked = true;
+  changeMode();
+  selectedScenario().focus();
 });
 
-demoChoice.addEventListener("change", () => {
+demoOptions.addEventListener("change", () => {
   select("demo-link").hidden = true;
   select("demo-link-status").textContent = "";
 });
@@ -2611,7 +2693,7 @@ copyDemoLink.addEventListener("click", async () => {
   if (gridMount) url.pathname = gridMount;
   url.search = "";
   url.hash = "";
-  url.searchParams.set("demo", demoChoice.value);
+  url.searchParams.set("demo", selectedScenario().value);
   const status = select("demo-link-status");
   try {
     await navigator.clipboard.writeText(url.href);
@@ -2628,22 +2710,33 @@ copyDemoLink.addEventListener("click", async () => {
   }
 });
 
-select("run-demo").addEventListener("click", async () => {
+function focusResultHeading(id) {
+  const heading = select(id);
+  heading.focus({ preventScroll: true });
+  const { top, bottom } = heading.getBoundingClientRect();
+  if (top < 0 || bottom > window.innerHeight) heading.scrollIntoView({ block: "start" });
+}
+
+runDemo.addEventListener("click", async () => {
   if (running || !demoMode.checked) return;
-  const scenario = demoScenarios.find(({ id }) => id === demoChoice.value);
-  if (!scenario) return;
+  const scenario = demoScenarios.find(({ id }) => id === selectedScenario().value);
   showBriefForm();
   priceComparison.checked = false;
   updateBudgetLimit();
   fillExampleBrief(scenario.brief);
-  message();
+  reportVisible = false;
+  render();
   setRunning(true);
+  runDemo.textContent = "Playing…";
   try {
     const { events, report } = createDemoRun(scenario);
-    await replayTimeline(events, `Demo · ${scenario.title}`, report.gifts.length, { demo: true });
+    const playback = replayTimeline(events, `Demo · ${scenario.title}`, report.gifts.length, { demo: true });
+    focusResultHeading("team-title");
+    await playback;
     showReport(report);
   } finally {
     setRunning(false);
+    runDemo.textContent = "Start demo";
   }
 });
 
@@ -2734,13 +2827,10 @@ function updateInterestSuggestions() {
   }
 }
 
-function updateBriefPreview() {
+function clearBriefFeedback() {
   updateInterestSuggestions();
   message();
   briefStatus.textContent = "";
-  if (!demoMode.checked) return;
-  const brief = readBrief();
-  if (validBrief(brief) && brief.recipient) showSampleBrief(brief);
 }
 
 function fillExampleBrief({ recipient, occasion, interests, budget }) {
@@ -2751,7 +2841,7 @@ function fillExampleBrief({ recipient, occasion, interests, budget }) {
   interestsInput.value = interests;
   if (priceComparison.checked) budgetBeforeComparison = String(budget);
   else budgetInput.value = budget;
-  updateBriefPreview();
+  clearBriefFeedback();
 }
 
 surprise.addEventListener("click", () => {
@@ -2762,7 +2852,7 @@ surprise.addEventListener("click", () => {
 for (const button of interestSuggestions) {
   button.addEventListener("click", () => {
     interestsInput.value = button.dataset.interest;
-    updateBriefPreview();
+    clearBriefFeedback();
   });
 }
 
@@ -2772,7 +2862,7 @@ interestsInput.addEventListener("input", updateInterestSuggestions);
 region.addEventListener("change", updateBudgetCurrency);
 priceComparison.addEventListener("change", () => {
   updateBudgetLimit();
-  updateBriefPreview();
+  clearBriefFeedback();
 });
 
 function downloadFile(content, name, type) {
@@ -2843,10 +2933,8 @@ if (gridMount) {
     // Browser storage is optional.
   }
 }
-const linkedDemo = demoScenarios.find(({ id }) => id === new URLSearchParams(location.search).get("demo"));
 if (linkedDemo && !form.hidden) {
   demoMode.checked = true;
-  demoChoice.value = linkedDemo.id;
   fillExampleBrief(linkedDemo.brief);
 }
 const liveAvailability = checkLiveAvailability().finally(updateMode);
