@@ -4,8 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="See how Gift Search creates research agents, coordinates handoffs, and uses shared memory to refine a shortlist.">
-  <meta name="theme-color" content="#fbfaf6">
+  <meta name="color-scheme" content="light dark">
   <title>Architecture · Gift Search</title>
+  <script src="./theme.js"></script>
   <link rel="stylesheet" href="./styles.css">
   <link rel="stylesheet" href="./site.css">
 </head>
@@ -24,7 +25,17 @@
         <a href="./guide.html">Setup</a>
         <a href="./architecture.html" aria-current="page">Architecture</a>
       </nav>
-      <a class="repo-link" href="https://github.com/sriaradhyula/gift-search-agent-skill">GitHub <span aria-hidden="true">↗</span></a>
+      <div class="header-controls">
+        <a class="repo-link" href="https://github.com/sriaradhyula/gift-search-agent-skill">GitHub <span aria-hidden="true">↗</span></a>
+        <label class="theme-picker">
+          <span class="theme-label">Theme</span>
+          <select id="theme-choice">
+            <option value="system">System</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </label>
+      </div>
     </div>
   </header>
   <main class="architecture-main" id="main">

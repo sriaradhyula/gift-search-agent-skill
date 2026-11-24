@@ -1,11 +1,10 @@
 .docs-site {
-  --canvas: #fbfaf6;
-  --ink: #232821;
-  --muted: #535c51;
-  --green: #23503c;
-  --green-hover: #1a3e2e;
-  --line: #dedfd4;
-  --wash: #eaf0e7;
+  --canvas: light-dark(#fbfaf6, #181e1a);
+  --ink: light-dark(#232821, #f0eee6);
+  --muted: light-dark(#535c51, #b7c4ba);
+  --green: light-dark(#23503c, #a7d8b6);
+  --line: light-dark(#dedfd4, #435448);
+  --wash: light-dark(#eaf0e7, #283d30);
   background: var(--canvas);
 }
 
@@ -38,7 +37,7 @@
   border: 1px solid var(--line);
   border-radius: 18px;
   background: var(--paper);
-  box-shadow: 0 12px 32px #233a2310;
+  box-shadow: 0 12px 32px light-dark(#233a2310, #0b100b38);
 }
 
 .install-panel h2 { font-size: .85rem; letter-spacing: 0; }
@@ -56,7 +55,7 @@
   border: 1px solid var(--line);
   border-radius: 8px;
   color: var(--muted);
-  background: white;
+  background: var(--input);
   font-size: .87rem;
   font-weight: 650;
 }
@@ -148,9 +147,9 @@
 .architecture-flow {
   margin-top: 34px;
   padding: clamp(18px, 4vw, 30px);
-  border: 1px solid #cfd9cb;
+  border: 1px solid var(--line);
   border-radius: 18px;
-  background: #f1f4ec;
+  background: light-dark(#f1f4ec, #222e25);
 }
 
 .flow-heading {
@@ -177,9 +176,9 @@
   position: relative;
   min-width: 0;
   padding: 17px;
-  border: 1px solid #ccd8c8;
+  border: 1px solid var(--line);
   border-radius: 11px;
-  background: white;
+  background: var(--paper);
 }
 
 .flow-steps li + li::before {
@@ -201,8 +200,8 @@
 .flow-memory {
   padding: 14px 17px;
   border-radius: 11px;
-  background: #e1ebdc;
-  color: #244333;
+  background: light-dark(#e1ebdc, #304838);
+  color: light-dark(#244333, #e0f0e4);
 }
 
 .architecture-content {
@@ -247,8 +246,6 @@
 }
 
 @media (max-width: 440px) {
-  .docs-site .header-inner { flex-wrap: wrap; gap: 4px 12px; padding-top: 8px; }
-  .docs-site .site-nav { order: 1; width: 100%; min-height: 34px; }
   .install-panel { padding: 16px; margin-top: 27px; }
   .install-terminal { grid-template-columns: 1fr; gap: 4px; }
   .install-terminal button { justify-self: start; }

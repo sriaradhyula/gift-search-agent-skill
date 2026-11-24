@@ -67,7 +67,12 @@ test("Grid serves the deep-linked demo to authorized readers", { timeout: 10_000
   assert.match(await page.text(), /name="gift-search-mount" content="\/apps\/gift-search"/);
   const mounted = await request("/apps/gift-search?demo=chocolate", credential);
   assert.equal(mounted.status, 200);
-  assert.match(await mounted.text(), /src="\/apps\/gift-search\/dashboard\.js"/);
+  const mountedHtml = await mounted.text();
+  assert.match(mountedHtml, /src="\/apps\/gift-search\/dashboard\.js"/);
+  assert.match(mountedHtml, /src="\/apps\/gift-search\/theme\.js"/);
+  const theme = await request("/apps/gift-search/theme.js", credential);
+  assert.equal(theme.status, 200);
+  assert.match(theme.headers.get("content-type"), /javascript/);
   for (const path of ["index.html", "dashboard.html"]) {
     const dashboard = await request(`/apps/gift-search/${path}?demo=chocolate`, credential);
     assert.equal(dashboard.status, 200);
