@@ -357,7 +357,7 @@ body:has(.chat-dock:not([hidden])) .dashboard { padding-bottom: 76px; }
 .chat-markdown :is(h1, h2) { font-size: 1.1em; }
 .chat-markdown :is(ul, ol) { padding-inline-start: 23px; margin-bottom: 0; }
 .chat-markdown blockquote { margin-inline: 0; padding-left: 9px; border-left: 2px solid #6d9c83; }
-.chat-markdown a { color: #b4efc6; }
+.chat-link { padding: 0; border: 0; background: none; color: #b4efc6; font: inherit; text-decoration: underline; text-align: start; }
 .chat-markdown code { font: .92em ui-monospace, monospace; background: #244336; border-radius: 3px; padding: 1px 3px; }
 .chat-markdown pre { max-width: 100%; overflow: auto; padding: 9px; border-radius: 5px; background: #203a2f; }
 .chat-markdown pre code { background: none; padding: 0; }
@@ -385,11 +385,13 @@ body:has(.chat-dock:not([hidden])) .dashboard { padding-bottom: 76px; }
 .text-link:hover { text-decoration: underline; text-underline-offset: 3px; }
 .price-band + .price-band { margin-top: 20px; }
 .price-band h3 { margin-bottom: 9px; color: var(--green); font-size: .99rem; }
+.price-band-empty { color: var(--muted); font-size: .82rem; }
 .wipe-session { display: block; margin-top: 13px; color: var(--cranberry-dark); }
 .results-heading { display: flex; justify-content: space-between; align-items: end; gap: 10px; margin-block: 22px 15px; }
 .results-heading > :first-child { min-width: 0; overflow-wrap: anywhere; }
 .results-heading h2 { color: var(--cranberry-dark); font-size: 1.55rem; }
 .results-heading p { color: var(--muted); margin-top: 4px; font-size: .82rem; line-height: 1.45; }
+.link-advice { margin-bottom: 14px; color: var(--muted); font-size: .82rem; line-height: 1.45; }
 .results-actions { display: flex; flex: none; flex-wrap: wrap; align-items: center; gap: 7px; }
 .results-actions button { min-height: 36px; padding: 6px 9px; font-size: .78rem; }
 .sort-control { flex: none; }
@@ -413,6 +415,8 @@ body:has(.chat-dock:not([hidden])) .dashboard { padding-bottom: 76px; }
 .card-footer { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding-top: 14px; margin-top: auto; }
 .card-price { font-weight: 750; font-size: .95rem; }
 .card-footer button { flex: none; }
+.card-actions { display: flex; flex-wrap: wrap; justify-content: end; align-items: center; gap: 6px; }
+.inspect-card-link { min-width: 28px; min-height: 28px; font-size: 1.04rem; }
 .research-leads { margin-top: 18px; }
 .research-leads h3 { font-size: 1rem; font-weight: 740; }
 .research-leads > p { margin-block: 5px 12px; color: var(--muted); font-size: .84rem; }
@@ -432,7 +436,9 @@ dialog h2 { margin-top: 7px; padding-right: 22px; }
 dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
 .detail-price { font-weight: 740; }
 #detail-caveat { color: var(--muted); }
-#detail-link { margin-top: 18px; }
+#detail-inspect, #open-inspected-link { margin-top: 16px; }
+#link-inspection-host { font-weight: 740; }
+#link-inspection-url { display: block; margin-top: 5px; padding: 9px; border-radius: 6px; background: var(--wash); overflow-wrap: anywhere; }
 .close-button { position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; border: 0; border-radius: 50%; background: var(--wash); color: var(--ink); font-size: 1.3rem; }
 #share-dialog { width: min(540px, calc(100% - 32px)); }
 .share-format { margin-top: 16px; }
@@ -561,7 +567,7 @@ dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
     <section class="intro" aria-labelledby="page-title">
       <div>
         <h1 id="page-title">Find <em>the gift.</em></h1>
-        <p>Whether you’re looking for a Secret Santa gift or something unique for a family member, collaborate with agents to find ideas and refine your search.</p>
+        <p>Find creative White Elephant, Secret Santa, and family gifts. Collaborate with agents to explore ideas and refine your search.</p>
       </div>
     </section>
     <div id="demo-controls" class="demo-controls" hidden>
@@ -748,6 +754,7 @@ dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
                 <button id="share-results" class="secondary" type="button">Share results</button>
               </div>
             </div>
+            <p class="link-advice" id="link-advice" hidden>Always use <strong>ⓘ Inspect link</strong> to check a destination before opening it.</p>
             <div class="card-grid" id="cards"></div>
             <div id="empty" class="empty" hidden><h3 id="empty-title">No matching gifts</h3><p id="empty-message"></p></div>
             <section id="research-leads" class="research-leads" aria-labelledby="leads-summary" hidden>
@@ -786,7 +793,15 @@ dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
     <p class="detail-price" id="detail-price"></p>
     <p id="detail-reason"></p>
     <p id="detail-caveat"></p>
-    <a id="detail-link" class="primary" target="_blank" rel="noopener noreferrer" hidden>Visit retailer <span aria-hidden="true">↗</span></a>
+    <button id="detail-inspect" class="secondary" type="button" hidden>ⓘ Inspect link</button>
+  </dialog>
+  <dialog id="link-inspection" aria-labelledby="link-inspection-title" aria-describedby="link-inspection-advice">
+    <form method="dialog"><button class="close-button" aria-label="Close link inspection" autofocus>×</button></form>
+    <h2 id="link-inspection-title">Inspect link</h2>
+    <p id="link-inspection-advice">Check the destination. Continue only if you recognize and trust it.</p>
+    <p id="link-inspection-host"></p>
+    <code id="link-inspection-url"></code>
+    <a id="open-inspected-link" class="secondary" target="_blank" rel="noopener noreferrer">Open destination <span aria-hidden="true">↗</span></a>
   </dialog>
   <dialog id="share-dialog" aria-labelledby="share-title">
     <form method="dialog"><button class="close-button" type="submit" aria-label="Close sharing">×</button></form>
@@ -1589,29 +1604,28 @@ async function replayTimeline(events, mode, count, { demo = false, consoleLabel,
 
 function chatMarkdown() {
   const md = window.markdownit({ html: false, linkify: false });
-  md.validateLink = (url) => /^(https?:\/\/|mailto:)/i.test(url);
-  md.renderer.rules.link_open = (tokens, index, options, env, renderer) => {
-    tokens[index].attrSet("target", "_blank");
-    tokens[index].attrSet("rel", "noopener noreferrer");
-    return renderer.renderToken(tokens, index, options);
+  md.validateLink = (value) => {
+    const url = URL.parse(value);
+    return Boolean(url && /^(https?:\/\/|mailto:)/i.test(value) && !url.username && !url.password);
   };
   md.renderer.rules.image = (tokens, index, options, env, renderer) => {
     const token = tokens[index];
     const alt = renderer.renderInlineAsText(token.children, options, env) || "Open image";
     const url = token.attrGet("src");
     const escape = md.utils.escapeHtml;
-    return `<a href="${escape(url)}" target="_blank" rel="noopener noreferrer">${escape(alt)}</a>`;
+    return `<a href="${escape(url)}">${escape(alt)}</a>`;
   };
   return md;
 }
 
-function enableChat({ endpoint, getContext, getHarness, onActivity }) {
+function enableChat({ endpoint, getContext, getHarness, onActivity, onInspectLink }) {
   const form = document.getElementById("claude-chat");
   const field = document.getElementById("claude-question");
   const messages = document.getElementById("claude-messages");
   const jump = document.getElementById("open-claude-chat");
   const markdown = chatMarkdown();
   const histories = new Map();
+  const linkDestinations = new WeakMap();
   const queue = [];
   let draining = false;
 
@@ -1631,8 +1645,25 @@ function enableChat({ endpoint, getContext, getHarness, onActivity }) {
   function showReply(body, text) {
     const follow = messages.scrollHeight - messages.scrollTop - messages.clientHeight < 48;
     body.innerHTML = markdown.render(text);
+    for (const link of body.querySelectorAll("a[href]")) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "chat-link";
+      button.setAttribute("aria-label", `Inspect link for ${link.textContent.trim()}`);
+      const icon = document.createElement("span");
+      icon.setAttribute("aria-hidden", "true");
+      icon.textContent = "ⓘ ";
+      button.append(icon, ...link.childNodes);
+      linkDestinations.set(button, link.href);
+      link.replaceWith(button);
+    }
     if (follow) messages.scrollTop = messages.scrollHeight;
   }
+
+  messages.addEventListener("click", (event) => {
+    const destination = linkDestinations.get(event.target.closest(".chat-link"));
+    if (destination) onInspectLink(destination);
+  });
 
   async function send({ content, context, reply, harness }) {
     if (!histories.has(harness.id)) histories.set(harness.id, []);
@@ -1761,7 +1792,8 @@ function shareText({ title, context, items }, checklist) {
     const link = checklist && url ? `<${url}>` : url;
     return [`${checklist ? "- [ ]" : "•"} ${safeLabel}`, ...[note, link].filter(Boolean).map((line) => `  ${line}`)].join("\n");
   });
-  return [title, context, blocks.join("\n\n")].join("\n\n") + "\n";
+  const linkAdvice = items.some(({ url }) => url) ? "Inspect retailer link destinations before opening them." : "";
+  return [title, context, linkAdvice, blocks.join("\n\n")].filter(Boolean).join("\n\n") + "\n";
 }
 
 function fitShareText(context, text, width) {
@@ -1903,6 +1935,7 @@ const harnessChoice = select("run-harness");
 const savedRuns = select("saved-runs");
 const region = select("region");
 const dialog = select("gift-detail");
+const linkInspection = select("link-inspection");
 const demoChoice = select("demo-scenario");
 const gridMount = document.querySelector('meta[name="gift-search-mount"]')?.content;
 const wipedSessionKey = "gift-search-session-wiped";
@@ -1941,6 +1974,24 @@ function price(gift) {
   return gift.price === null ? "Price unknown" : formatMoney(gift.price, report.brief.currency);
 }
 
+function inspectLink(destination) {
+  const url = URL.parse(destination);
+  if (!url || !["https:", "http:", "mailto:"].includes(url.protocol) || url.username || url.password) return;
+  select("link-inspection-host").textContent = url.host || "Email link";
+  select("link-inspection-url").textContent = url.href;
+  select("open-inspected-link").href = url.href;
+  linkInspection.showModal();
+}
+
+function inspectLinkButton(url, name, iconOnly = false) {
+  const button = element("button", iconOnly ? "text-link inspect-card-link" : "text-link", iconOnly ? "ⓘ" : "ⓘ Inspect link");
+  button.type = "button";
+  button.title = "Inspect link";
+  button.setAttribute("aria-label", `Inspect link for ${name}`);
+  button.addEventListener("click", () => inspectLink(url));
+  return button;
+}
+
 function openGift(gift) {
   select("detail-category").textContent = gift.category;
   select("detail-title").textContent = gift.name;
@@ -1949,11 +2000,10 @@ function openGift(gift) {
   const caveat = select("detail-caveat");
   caveat.textContent = gift.caveat;
   caveat.hidden = !gift.caveat;
-  const link = select("detail-link");
+  const inspect = select("detail-inspect");
   const url = productUrl(gift.url);
-  link.hidden = !url;
-  if (url) link.href = url.href;
-  else link.removeAttribute("href");
+  inspect.hidden = !url;
+  inspect.onclick = url ? () => inspectLink(url) : null;
   dialog.showModal();
 }
 
@@ -1990,7 +2040,11 @@ function buildCard(gift, heading = "h3") {
   details.type = "button";
   details.setAttribute("aria-label", `Details for ${gift.name}`);
   details.addEventListener("click", () => openGift(gift));
-  footer.append(cost, details);
+  const actions = element("div", "card-actions");
+  const url = productUrl(gift.url);
+  if (url) actions.append(inspectLinkButton(url, gift.name, true));
+  actions.append(details);
+  footer.append(cost, actions);
   body.append(category, title, reason, footer);
   card.append(body);
   return card;
@@ -2010,11 +2064,7 @@ function buildLeadCard(lead) {
   const url = productUrl(lead.url);
   if (url) {
     const footer = element("div", "card-footer");
-    const link = element("a", "text-link", "Open scout link ↗");
-    link.href = url.href;
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-    footer.append(link);
+    footer.append(inspectLinkButton(url, lead.name));
     body.append(footer);
   }
   card.append(body);
@@ -2044,12 +2094,17 @@ function renderGiftCards() {
   groups.push({ label: "Other gifts", band: null });
   cards.replaceChildren(...groups.flatMap(({ label, band }) => {
     const matches = gifts.filter(({ price }) => usdPriceBand(price) === band);
-    if (!matches.length) return [];
+    if (!matches.length && (!gifts.length || band === 0 || band === null)) return [];
     const section = element("section", "price-band");
-    const heading = element("h3", "", label);
-    const grid = element("div", "card-grid");
-    grid.replaceChildren(...matches.map((gift) => buildCard(gift, "h4")));
-    section.append(heading, grid);
+    section.append(element("h3", "", label));
+    if (matches.length) {
+      const grid = element("div", "card-grid");
+      grid.replaceChildren(...matches.map((gift) => buildCard(gift, "h4")));
+      section.append(grid);
+    } else {
+      const message = report.mode === "live" ? "No verified gifts in this range." : "No gifts in this range.";
+      section.append(element("p", "price-band-empty", message));
+    }
     return [section];
   }));
 }
@@ -2067,6 +2122,7 @@ function render() {
   const discoveryStatus = select("discovery-status");
   discoveryStatus.hidden = !discovery;
   discoveryStatus.textContent = discovery ?? "";
+  select("link-advice").hidden = ![...gifts, ...leads].some(({ url }) => productUrl(url));
   renderGiftCards();
   select("share-results").disabled = !gifts.length && !leads.length;
   select("research-leads").hidden = !leads.length;
@@ -2618,6 +2674,7 @@ async function checkLiveAvailability() {
       harnessChoice.addEventListener("change", updateChatVisibility);
       if (harnessChoice.value) enableChat({
         endpoint: liveApi("chat"), getContext: chatContext, getHarness: selectedHarness, onActivity: showTeamEvent,
+        onInspectLink: inspectLink,
       });
       historyEnabled = config.history === true;
       if (gridMount && historyEnabled) select("search-history").open = true;

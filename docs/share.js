@@ -35,7 +35,8 @@ function shareText({ title, context, items }, checklist) {
     const link = checklist && url ? `<${url}>` : url;
     return [`${checklist ? "- [ ]" : "•"} ${safeLabel}`, ...[note, link].filter(Boolean).map((line) => `  ${line}`)].join("\n");
   });
-  return [title, context, blocks.join("\n\n")].join("\n\n") + "\n";
+  const linkAdvice = items.some(({ url }) => url) ? "Inspect retailer link destinations before opening them." : "";
+  return [title, context, linkAdvice, blocks.join("\n\n")].filter(Boolean).join("\n\n") + "\n";
 }
 
 function fitShareText(context, text, width) {

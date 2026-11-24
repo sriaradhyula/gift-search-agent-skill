@@ -22,6 +22,7 @@ const harnessChoice = select("run-harness");
 const savedRuns = select("saved-runs");
 const region = select("region");
 const dialog = select("gift-detail");
+const linkInspection = select("link-inspection");
 const demoChoice = select("demo-scenario");
 const gridMount = document.querySelector('meta[name="gift-search-mount"]')?.content;
 const wipedSessionKey = "gift-search-session-wiped";
@@ -60,6 +61,24 @@ function price(gift) {
   return gift.price === null ? "Price unknown" : formatMoney(gift.price, report.brief.currency);
 }
 
+function inspectLink(destination) {
+  const url = URL.parse(destination);
+  if (!url || !["https:", "http:", "mailto:"].includes(url.protocol) || url.username || url.password) return;
+  select("link-inspection-host").textContent = url.host || "Email link";
+  select("link-inspection-url").textContent = url.href;
+  select("open-inspected-link").href = url.href;
+  linkInspection.showModal();
+}
+
+function inspectLinkButton(url, name, iconOnly = false) {
+  const button = element("button", iconOnly ? "text-link inspect-card-link" : "text-link", iconOnly ? "ⓘ" : "ⓘ Inspect link");
+  button.type = "button";
+  button.title = "Inspect link";
+  button.setAttribute("aria-label", `Inspect link for ${name}`);
+  button.addEventListener("click", () => inspectLink(url));
+  return button;
+}
+
 function openGift(gift) {
   select("detail-category").textContent = gift.category;
   select("detail-title").textContent = gift.name;
@@ -68,11 +87,10 @@ function openGift(gift) {
   const caveat = select("detail-caveat");
   caveat.textContent = gift.caveat;
   caveat.hidden = !gift.caveat;
-  const link = select("detail-link");
+  const inspect = select("detail-inspect");
   const url = productUrl(gift.url);
-  link.hidden = !url;
-  if (url) link.href = url.href;
-  else link.removeAttribute("href");
+  inspect.hidden = !url;
+  inspect.onclick = url ? () => inspectLink(url) : null;
   dialog.showModal();
 }
 
@@ -109,7 +127,11 @@ function buildCard(gift, heading = "h3") {
   details.type = "button";
   details.setAttribute("aria-label", `Details for ${gift.name}`);
   details.addEventListener("click", () => openGift(gift));
-  footer.append(cost, details);
+  const actions = element("div", "card-actions");
+  const url = productUrl(gift.url);
+  if (url) actions.append(inspectLinkButton(url, gift.name, true));
+  actions.append(details);
+  footer.append(cost, actions);
   body.append(category, title, reason, footer);
   card.append(body);
   return card;
@@ -129,11 +151,7 @@ function buildLeadCard(lead) {
   const url = productUrl(lead.url);
   if (url) {
     const footer = element("div", "card-footer");
-    const link = element("a", "text-link", "Open scout link ↗");
-    link.href = url.href;
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-    footer.append(link);
+    footer.append(inspectLinkButton(url, lead.name));
     body.append(footer);
   }
   card.append(body);
@@ -163,12 +181,17 @@ function renderGiftCards() {
   groups.push({ label: "Other gifts", band: null });
   cards.replaceChildren(...groups.flatMap(({ label, band }) => {
     const matches = gifts.filter(({ price }) => usdPriceBand(price) === band);
-    if (!matches.length) return [];
+    if (!matches.length && (!gifts.length || band === 0 || band === null)) return [];
     const section = element("section", "price-band");
-    const heading = element("h3", "", label);
-    const grid = element("div", "card-grid");
-    grid.replaceChildren(...matches.map((gift) => buildCard(gift, "h4")));
-    section.append(heading, grid);
+    section.append(element("h3", "", label));
+    if (matches.length) {
+      const grid = element("div", "card-grid");
+      grid.replaceChildren(...matches.map((gift) => buildCard(gift, "h4")));
+      section.append(grid);
+    } else {
+      const message = report.mode === "live" ? "No verified gifts in this range." : "No gifts in this range.";
+      section.append(element("p", "price-band-empty", message));
+    }
     return [section];
   }));
 }
@@ -186,6 +209,7 @@ function render() {
   const discoveryStatus = select("discovery-status");
   discoveryStatus.hidden = !discovery;
   discoveryStatus.textContent = discovery ?? "";
+  select("link-advice").hidden = ![...gifts, ...leads].some(({ url }) => productUrl(url));
   renderGiftCards();
   select("share-results").disabled = !gifts.length && !leads.length;
   select("research-leads").hidden = !leads.length;
@@ -737,6 +761,7 @@ async function checkLiveAvailability() {
       harnessChoice.addEventListener("change", updateChatVisibility);
       if (harnessChoice.value) enableChat({
         endpoint: liveApi("chat"), getContext: chatContext, getHarness: selectedHarness, onActivity: showTeamEvent,
+        onInspectLink: inspectLink,
       });
       historyEnabled = config.history === true;
       if (gridMount && historyEnabled) select("search-history").open = true;

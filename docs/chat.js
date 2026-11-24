@@ -2,29 +2,28 @@ import { consumeEvents } from "./team.js";
 
 function chatMarkdown() {
   const md = window.markdownit({ html: false, linkify: false });
-  md.validateLink = (url) => /^(https?:\/\/|mailto:)/i.test(url);
-  md.renderer.rules.link_open = (tokens, index, options, env, renderer) => {
-    tokens[index].attrSet("target", "_blank");
-    tokens[index].attrSet("rel", "noopener noreferrer");
-    return renderer.renderToken(tokens, index, options);
+  md.validateLink = (value) => {
+    const url = URL.parse(value);
+    return Boolean(url && /^(https?:\/\/|mailto:)/i.test(value) && !url.username && !url.password);
   };
   md.renderer.rules.image = (tokens, index, options, env, renderer) => {
     const token = tokens[index];
     const alt = renderer.renderInlineAsText(token.children, options, env) || "Open image";
     const url = token.attrGet("src");
     const escape = md.utils.escapeHtml;
-    return `<a href="${escape(url)}" target="_blank" rel="noopener noreferrer">${escape(alt)}</a>`;
+    return `<a href="${escape(url)}">${escape(alt)}</a>`;
   };
   return md;
 }
 
-export function enableChat({ endpoint, getContext, getHarness, onActivity }) {
+export function enableChat({ endpoint, getContext, getHarness, onActivity, onInspectLink }) {
   const form = document.getElementById("claude-chat");
   const field = document.getElementById("claude-question");
   const messages = document.getElementById("claude-messages");
   const jump = document.getElementById("open-claude-chat");
   const markdown = chatMarkdown();
   const histories = new Map();
+  const linkDestinations = new WeakMap();
   const queue = [];
   let draining = false;
 
@@ -44,8 +43,25 @@ export function enableChat({ endpoint, getContext, getHarness, onActivity }) {
   function showReply(body, text) {
     const follow = messages.scrollHeight - messages.scrollTop - messages.clientHeight < 48;
     body.innerHTML = markdown.render(text);
+    for (const link of body.querySelectorAll("a[href]")) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "chat-link";
+      button.setAttribute("aria-label", `Inspect link for ${link.textContent.trim()}`);
+      const icon = document.createElement("span");
+      icon.setAttribute("aria-hidden", "true");
+      icon.textContent = "ⓘ ";
+      button.append(icon, ...link.childNodes);
+      linkDestinations.set(button, link.href);
+      link.replaceWith(button);
+    }
     if (follow) messages.scrollTop = messages.scrollHeight;
   }
+
+  messages.addEventListener("click", (event) => {
+    const destination = linkDestinations.get(event.target.closest(".chat-link"));
+    if (destination) onInspectLink(destination);
+  });
 
   async function send({ content, context, reply, harness }) {
     if (!histories.has(harness.id)) histories.set(harness.id, []);

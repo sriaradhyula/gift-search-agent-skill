@@ -309,7 +309,7 @@ body:has(.chat-dock:not([hidden])) .dashboard { padding-bottom: 76px; }
 .chat-markdown :is(h1, h2) { font-size: 1.1em; }
 .chat-markdown :is(ul, ol) { padding-inline-start: 23px; margin-bottom: 0; }
 .chat-markdown blockquote { margin-inline: 0; padding-left: 9px; border-left: 2px solid #6d9c83; }
-.chat-markdown a { color: #b4efc6; }
+.chat-link { padding: 0; border: 0; background: none; color: #b4efc6; font: inherit; text-decoration: underline; text-align: start; }
 .chat-markdown code { font: .92em ui-monospace, monospace; background: #244336; border-radius: 3px; padding: 1px 3px; }
 .chat-markdown pre { max-width: 100%; overflow: auto; padding: 9px; border-radius: 5px; background: #203a2f; }
 .chat-markdown pre code { background: none; padding: 0; }
@@ -337,11 +337,13 @@ body:has(.chat-dock:not([hidden])) .dashboard { padding-bottom: 76px; }
 .text-link:hover { text-decoration: underline; text-underline-offset: 3px; }
 .price-band + .price-band { margin-top: 20px; }
 .price-band h3 { margin-bottom: 9px; color: var(--green); font-size: .99rem; }
+.price-band-empty { color: var(--muted); font-size: .82rem; }
 .wipe-session { display: block; margin-top: 13px; color: var(--cranberry-dark); }
 .results-heading { display: flex; justify-content: space-between; align-items: end; gap: 10px; margin-block: 22px 15px; }
 .results-heading > :first-child { min-width: 0; overflow-wrap: anywhere; }
 .results-heading h2 { color: var(--cranberry-dark); font-size: 1.55rem; }
 .results-heading p { color: var(--muted); margin-top: 4px; font-size: .82rem; line-height: 1.45; }
+.link-advice { margin-bottom: 14px; color: var(--muted); font-size: .82rem; line-height: 1.45; }
 .results-actions { display: flex; flex: none; flex-wrap: wrap; align-items: center; gap: 7px; }
 .results-actions button { min-height: 36px; padding: 6px 9px; font-size: .78rem; }
 .sort-control { flex: none; }
@@ -365,6 +367,8 @@ body:has(.chat-dock:not([hidden])) .dashboard { padding-bottom: 76px; }
 .card-footer { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding-top: 14px; margin-top: auto; }
 .card-price { font-weight: 750; font-size: .95rem; }
 .card-footer button { flex: none; }
+.card-actions { display: flex; flex-wrap: wrap; justify-content: end; align-items: center; gap: 6px; }
+.inspect-card-link { min-width: 28px; min-height: 28px; font-size: 1.04rem; }
 .research-leads { margin-top: 18px; }
 .research-leads h3 { font-size: 1rem; font-weight: 740; }
 .research-leads > p { margin-block: 5px 12px; color: var(--muted); font-size: .84rem; }
@@ -384,7 +388,9 @@ dialog h2 { margin-top: 7px; padding-right: 22px; }
 dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
 .detail-price { font-weight: 740; }
 #detail-caveat { color: var(--muted); }
-#detail-link { margin-top: 18px; }
+#detail-inspect, #open-inspected-link { margin-top: 16px; }
+#link-inspection-host { font-weight: 740; }
+#link-inspection-url { display: block; margin-top: 5px; padding: 9px; border-radius: 6px; background: var(--wash); overflow-wrap: anywhere; }
 .close-button { position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; border: 0; border-radius: 50%; background: var(--wash); color: var(--ink); font-size: 1.3rem; }
 #share-dialog { width: min(540px, calc(100% - 32px)); }
 .share-format { margin-top: 16px; }

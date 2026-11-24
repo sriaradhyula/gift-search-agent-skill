@@ -1,6 +1,6 @@
 # Gift Search v2
 
-Whether you’re looking for a Secret Santa gift or something unique for a family member, collaborate with agents to find ideas and refine your search.
+Find creative White Elephant, Secret Santa, and family gifts. Collaborate with agents to explore ideas and refine your search.
 
 ## Try it
 
