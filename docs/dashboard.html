@@ -43,7 +43,7 @@
     <section class="intro" aria-labelledby="page-title">
       <div>
         <h1 id="page-title">Find <em>the gift.</em></h1>
-        <p>Whether you’re looking for a Secret Santa gift or something unique for a family member, collaborate with agents to find ideas and refine your search.</p>
+        <p>Find creative White Elephant, Secret Santa, and family gifts. Collaborate with agents to explore ideas and refine your search.</p>
       </div>
     </section>
     <div id="demo-controls" class="demo-controls" hidden>
@@ -230,6 +230,7 @@
                 <button id="share-results" class="secondary" type="button">Share results</button>
               </div>
             </div>
+            <p class="link-advice" id="link-advice" hidden>Always use <strong>ⓘ Inspect link</strong> to check a destination before opening it.</p>
             <div class="card-grid" id="cards"></div>
             <div id="empty" class="empty" hidden><h3 id="empty-title">No matching gifts</h3><p id="empty-message"></p></div>
             <section id="research-leads" class="research-leads" aria-labelledby="leads-summary" hidden>
@@ -268,7 +269,15 @@
     <p class="detail-price" id="detail-price"></p>
     <p id="detail-reason"></p>
     <p id="detail-caveat"></p>
-    <a id="detail-link" class="primary" target="_blank" rel="noopener noreferrer" hidden>Visit retailer <span aria-hidden="true">↗</span></a>
+    <button id="detail-inspect" class="secondary" type="button" hidden>ⓘ Inspect link</button>
+  </dialog>
+  <dialog id="link-inspection" aria-labelledby="link-inspection-title" aria-describedby="link-inspection-advice">
+    <form method="dialog"><button class="close-button" aria-label="Close link inspection" autofocus>×</button></form>
+    <h2 id="link-inspection-title">Inspect link</h2>
+    <p id="link-inspection-advice">Check the destination. Continue only if you recognize and trust it.</p>
+    <p id="link-inspection-host"></p>
+    <code id="link-inspection-url"></code>
+    <a id="open-inspected-link" class="secondary" target="_blank" rel="noopener noreferrer">Open destination <span aria-hidden="true">↗</span></a>
   </dialog>
   <dialog id="share-dialog" aria-labelledby="share-title">
     <form method="dialog"><button class="close-button" type="submit" aria-label="Close sharing">×</button></form>
