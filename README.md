@@ -42,4 +42,4 @@ The skill creates an HTML dashboard after each search, tries to open it in your 
 
 Watch the handoffs in **Multi-agent Collaboration** and resume a previous search from **Search history**.
 
-[Documentation](https://sriaradhyula.github.io/gift-search-agent-skill/) · [Architecture](https://sriaradhyula.github.io/gift-search-agent-skill/architecture.html) · [Original Outshift walkthrough](https://outshift.cisco.com/blog/ai-ml/ai-holiday-shopper-multi-agent-gift-finder) · [Apache 2.0 license](LICENSE)
+[Documentation](https://sriaradhyula.github.io/gift-search-agent-skill/) · [Architecture](https://sriaradhyula.github.io/gift-search-agent-skill/architecture.html) · [Apache 2.0 license](LICENSE)
