@@ -57,8 +57,8 @@ function parseBrief(body) {
       || body.budget === null || body.budget <= 0 || body.budget > 1_000_000) {
     throw new Error("Invalid gift brief.");
   }
-  const { recipient, occasion, interests, budget, currency, region, neededBy, exclude } = body;
-  return { recipient, occasion, interests, budget, currency, region, neededBy, exclude };
+  const { recipient, occasion, interests, budget, currency, region, neededBy, exclude, comparePriceBands } = body;
+  return { recipient, occasion, interests, budget, currency, region, neededBy, exclude, ...(comparePriceBands && { comparePriceBands }) };
 }
 
 function localOrigin(request) {

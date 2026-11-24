@@ -31,7 +31,31 @@ export function shoppingThumbnail(value) {
 export function validBrief(brief) {
   return isRecord(brief) && briefTextFields.every((field) => isText(brief[field]))
     && isAmount(brief.budget) && isText(brief.currency) && /^[A-Z]{3}$/.test(brief.currency)
-    && isDate(brief.neededBy);
+    && isDate(brief.neededBy)
+    && (brief.comparePriceBands === undefined || brief.comparePriceBands === false
+      || (brief.comparePriceBands === true && brief.currency === "USD"));
+}
+
+export const usdPriceComparisonCap = 100;
+export const usdPriceBandLabels = ["Under $25", "$25–$50", "Over $50 to $100"];
+
+export function usdPriceBand(price) {
+  if (price === null || price > usdPriceComparisonCap) return null;
+  if (price < 25) return 0;
+  return price <= 50 ? 1 : 2;
+}
+
+export function shortlistGifts(ranked, brief) {
+  const limit = 5;
+  if (!brief.comparePriceBands) return ranked.slice(0, limit);
+
+  const selected = new Set(usdPriceBandLabels.map((_, band) =>
+    ranked.find(({ price }) => usdPriceBand(price) === band)).filter(Boolean));
+  for (const gift of ranked) {
+    if (selected.size === limit) break;
+    selected.add(gift);
+  }
+  return ranked.filter((gift) => selected.has(gift));
 }
 
 export function validGift(gift, mode) {

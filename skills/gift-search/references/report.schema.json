@@ -33,8 +33,11 @@
         "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
         "region": { "type": "string" },
         "neededBy": { "type": ["string", "null"], "format": "date" },
-        "exclude": { "type": "string" }
-      }
+        "exclude": { "type": "string" },
+        "comparePriceBands": { "type": "boolean" }
+      },
+      "if": { "required": ["comparePriceBands"], "properties": { "comparePriceBands": { "const": true } } },
+      "then": { "properties": { "currency": { "const": "USD" } } }
     },
     "checkedOn": { "type": ["string", "null"], "format": "date" },
     "gifts": {

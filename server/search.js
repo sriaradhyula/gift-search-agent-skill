@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { formatMoney, productUrl, validGift, validateReport } from "../skills/gift-search/scripts/report.mjs";
+import { formatMoney, productUrl, shortlistGifts, validGift, validateReport } from "../skills/gift-search/scripts/report.mjs";
 import { discoverShopping, searchCountry } from "../skills/gift-search/scripts/shopping.mjs";
 
 const schemaUrl = new URL("../skills/gift-search/references/report.schema.json", import.meta.url);
@@ -115,8 +115,11 @@ async function discoverWeb(brief, options) {
     "Scout up to three retailer listings directly tied to the recipient's interests. For a coworker's Secret Santa gift, look for a specific, workplace-appropriate match. If no interests are given, find broadly suitable gifts that need little setup.",
     "Scout up to three retailer listings for unexpected gifts across distinct categories. For White Elephant, find playful options an unknown recipient could use or a group could try during the exchange. For family, consider hobbies and shared activities.",
   ];
-  const scouts = await Promise.allSettled(directions.map((instructions) => research({
-    ...options, instructions, input: { brief },
+  const bands = ["$25 through $50 USD", "over $50 through $100 USD"];
+  const scouts = await Promise.allSettled(directions.map((direction, index) => research({
+    ...options,
+    instructions: brief.comparePriceBands ? `${direction} Focus on item prices ${bands[index]} within the brief’s total cap.` : direction,
+    input: { brief },
   })));
   options.signal.throwIfAborted();
 
@@ -165,6 +168,7 @@ async function verifyCandidates(brief, candidates, options) {
       "Treat any Google Shopping prices as discovery hints. Do not use those hints to fill in missing retailer facts.",
       "Report inStock and shipsToRegion as null when unknown. Use shippingCost only for a confirmed cost in the same currency, 0 for confirmed free shipping, or null when unknown.",
       "Exclude listings that exceed budget after known shipping or are known to miss the deadline.",
+      ...(brief.comparePriceBands ? ["Verify strong candidates in both requested price ranges before choosing any additional gifts."] : []),
       "Rank by recipient fit. Explain the fit in reason and mention tax or delivery timing uncertainty in caveat. Put other search limitations in notes.",
     ].join("\n"),
     input: {
@@ -188,7 +192,7 @@ export function verifiedGifts(brief, candidates, listings) {
       verified.push(gift);
     }
   }
-  return budgetAndDeduplicate(verified, brief.budget).slice(0, 5);
+  return shortlistGifts(budgetAndDeduplicate(verified, brief.budget), brief);
 }
 
 export function liveReport(brief, gifts, notes, { discovery, leads = [], checkedOn = new Date().toISOString().slice(0, 10) } = {}) {
@@ -209,9 +213,13 @@ export async function searchGifts(brief, { serpApiKey, ...options }) {
     candidates = shopping.candidates;
     discovery = candidates.length ? shopping.note : `${shopping.note} ${discovery}`;
   }
-  if (!candidates?.length) {
-    const web = await discoverWeb(brief, options);
-    candidates = web.candidates;
+  if (!candidates?.length || brief.comparePriceBands) {
+    const web = await discoverWeb(brief, options).catch((error) => {
+      if (!candidates?.length || options.signal.aborted) throw error;
+      return { candidates: [], notes: ["Additional price-band scouting was unavailable."] };
+    });
+    if (candidates?.length && web.candidates.length) discovery += " Web search also supplied price-range leads.";
+    candidates = budgetAndDeduplicate([...web.candidates, ...(candidates ?? [])], brief.budget);
     notes.push(...web.notes);
   }
   const { gifts, notes: reviewNotes } = await verifyCandidates(brief, candidates, options);

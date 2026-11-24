@@ -305,6 +305,7 @@ export async function searchWithHarness(brief, {
       async plan(brief, researchTurns, { turn, board, previousScouts, reviewer }) {
         const result = await harnessTurn(harness, promptFor(skill, "Team planner", [
           "Design two or three scout roles with distinct areas of expertise and search angles for this turn.",
+          ...(brief.comparePriceBands ? ["Assign one scout to $25–$50 USD and another to over $50 through $100 USD. Keep both assignments within the brief’s total cap and use a third scout for lower-priced ideas when useful."] : []),
           "If no interests are given, plan a varied search using the recipient and occasion without assuming hobbies.",
           "Use earlier findings, reviewer decisions, and open questions on the board to pick new search angles. Every scout must have a different name and area of expertise from the previous scouts.",
           "For each role give a short unique name, a persona describing their expertise, and a concrete assignment in focus. Plan the team only.",
@@ -347,6 +348,7 @@ export async function searchWithHarness(brief, {
           "If the listing does not show delivery coverage, find and open the retailer's shipping policy using the same tools. Explicit coverage for the destination in the policy is enough if the item is eligible. A storefront locale alone is insufficient. Give the policy URL in notes when it establishes coverage.",
           "Include only listings with confirmed price, stock, and destination. Use null for unknown shipping cost and disclose it. Include known shipping in the budget. Treat estimated arrival separately from destination, flag uncertainty, and exclude known late items. Do not add products to a cart.",
           "Check the most promising leads first. For each rejected or unreviewed candidate, state which checks succeeded and what remains unconfirmed. If a scout URL fails and you find a replacement for the same product, give its exact URL in notes so the scouts can submit it in the next turn.",
+          ...(brief.comparePriceBands ? ["Check the strongest lead in each requested price range before checking additional leads at the same price."] : []),
           'Format: {"gifts":[{"candidateId":0,"name":"Item","category":"Category","price":25,"currency":"USD","merchant":"Store","url":"https://retailer.example/item","reason":"Why it fits","caveat":"Tax or delivery caveat","inStock":true,"shipsToRegion":true,"shippingCost":null}],"rejected":[{"candidateId":1,"reason":"Retailer could not confirm stock"}],"notes":[]}',
           ], data: {
             brief, turn, researchTurns, board: board.slice(-80), assignment: role,

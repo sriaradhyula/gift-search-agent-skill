@@ -199,6 +199,8 @@ fieldset { min-inline-size: 0; margin: 0; padding: 0; border: 0; }
 .budget-input { display: flex; align-items: center; border: 1px solid var(--line); border-radius: 8px; padding-left: 9px; }
 .budget-input span { color: var(--muted); font-size: .72rem; font-weight: 700; }
 .budget-input input { height: 38px; border: 0; }
+.price-comparison { display: flex; align-items: start; gap: 8px; margin-bottom: 14px; font-size: .8rem; font-weight: 650; line-height: 1.35; }
+.price-comparison input { flex: none; margin: 2px 0 0; accent-color: var(--action); }
 .optional { margin: 0 0 15px; color: var(--muted); font-size: .8rem; }
 .optional summary { padding-block: 2px 4px; font-weight: 630; }
 .optional[open] summary { margin-bottom: 9px; }
@@ -381,6 +383,8 @@ body:has(.chat-dock:not([hidden])) .dashboard { padding-bottom: 76px; }
 }
 .text-link { padding: 0; border: 0; color: var(--green); background: none; text-decoration: none; font-size: .79rem; font-weight: 700; }
 .text-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+.price-band + .price-band { margin-top: 20px; }
+.price-band h3 { margin-bottom: 9px; color: var(--green); font-size: .99rem; }
 .wipe-session { display: block; margin-top: 13px; color: var(--cranberry-dark); }
 .results-heading { display: flex; justify-content: space-between; align-items: end; gap: 10px; margin-block: 22px 15px; }
 .results-heading > :first-child { min-width: 0; overflow-wrap: anywhere; }
@@ -404,7 +408,7 @@ body:has(.chat-dock:not([hidden])) .dashboard { padding-bottom: 76px; }
 .photo-3, .photo-4, .photo-5 { --y: 100%; }
 .card-body { display: flex; flex: 1; flex-direction: column; padding: 15px; overflow-wrap: anywhere; }
 .card-category { color: var(--green); font-size: .68rem; line-height: 1.35; font-weight: 740; letter-spacing: .055em; text-transform: uppercase; }
-.card-body h3 { margin-top: 5px; font-size: 1rem; line-height: 1.3; letter-spacing: -.023em; }
+.card-body :is(h3, h4) { margin-top: 5px; font-size: 1rem; line-height: 1.3; letter-spacing: -.023em; }
 .card-reason { margin-top: 7px; color: var(--muted); font-size: .82rem; line-height: 1.5; }
 .card-footer { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding-top: 14px; margin-top: auto; }
 .card-price { font-weight: 750; font-size: .95rem; }
@@ -629,6 +633,10 @@ dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
                 </select>
               </div>
             </div>
+            <label id="price-comparison-control" class="price-comparison">
+              <input type="checkbox" id="compare-price-bands" autocomplete="off">
+              <span>Compare $25–$50 and $50–$100</span>
+            </label>
             <details class="optional">
               <summary>More options</summary>
               <div class="field"><label for="neededBy">Needed by</label><input type="date" id="neededBy" name="neededBy"></div>
@@ -842,7 +850,31 @@ function shoppingThumbnail(value) {
 function validBrief(brief) {
   return isRecord(brief) && briefTextFields.every((field) => isText(brief[field]))
     && isAmount(brief.budget) && isText(brief.currency) && /^[A-Z]{3}$/.test(brief.currency)
-    && isDate(brief.neededBy);
+    && isDate(brief.neededBy)
+    && (brief.comparePriceBands === undefined || brief.comparePriceBands === false
+      || (brief.comparePriceBands === true && brief.currency === "USD"));
+}
+
+const usdPriceComparisonCap = 100;
+const usdPriceBandLabels = ["Under $25", "$25–$50", "Over $50 to $100"];
+
+function usdPriceBand(price) {
+  if (price === null || price > usdPriceComparisonCap) return null;
+  if (price < 25) return 0;
+  return price <= 50 ? 1 : 2;
+}
+
+function shortlistGifts(ranked, brief) {
+  const limit = 5;
+  if (!brief.comparePriceBands) return ranked.slice(0, limit);
+
+  const selected = new Set(usdPriceBandLabels.map((_, band) =>
+    ranked.find(({ price }) => usdPriceBand(price) === band)).filter(Boolean));
+  for (const gift of ranked) {
+    if (selected.size === limit) break;
+    selected.add(gift);
+  }
+  return ranked.filter((gift) => selected.has(gift));
 }
 
 function validGift(gift, mode) {
@@ -882,6 +914,7 @@ function formatMoney(value, currency) {
     style: "currency", currency, minimumFractionDigits: 0, maximumFractionDigits: 2,
   }).format(value);
 }
+
 
 const examples = {
   secretSanta: {
@@ -975,6 +1008,18 @@ const catalog = [
     reason: "Three small jars let a coworker try different levels of crunch and heat.",
     caveat: "Check the ingredients for sesame, peanuts, or other allergens.",
   },
+  {
+    name: "Dinner-party mystery game", category: "Games", price: 38, hasCatalogPhoto: false,
+    tags: "party games puzzles group activity detective dinner", occasions: ["White Elephant"],
+    reason: "Gives the recipient a ready-made game night with roles and clues for friends.",
+    caveat: "Check the minimum player count and how much time a game takes.",
+  },
+  {
+    name: "Fold-flat tabletop shuffleboard", category: "Games", price: 68, hasCatalogPhoto: false,
+    tags: "party games desk puzzles group activity tabletop", occasions: ["White Elephant"],
+    reason: "Packs away between gatherings and comes out when people want a quick tournament.",
+    caveat: "Measure the table before choosing a board size.",
+  },
 ];
 
 const sampleImage = (name) => catalog.findIndex((gift) => gift.name === name && gift.hasCatalogPhoto !== false);
@@ -983,7 +1028,7 @@ const words = (text) => new Set(text.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [
 function runSample(brief) {
   const interests = words(brief.interests);
   const exclusions = brief.exclude.toLowerCase().split(/[,;\n]/).map((term) => term.trim()).filter(Boolean);
-  const gifts = catalog
+  const ranked = catalog
     .filter((gift) => brief.budget === null || gift.price <= brief.budget)
     .filter((gift) => !exclusions.some((term) => `${gift.name} ${gift.tags}`.toLowerCase().includes(term)))
     .map((gift) => {
@@ -993,7 +1038,6 @@ function runSample(brief) {
     })
     .filter(({ matches }) => !interests.size || matches > 0)
     .sort((a, b) => b.score - a.score)
-    .slice(0, 5)
     .map(({ gift: { name, category, price, reason, caveat } }) => ({
       name, category, price, reason, caveat, merchant: null, url: null,
     }));
@@ -1001,7 +1045,7 @@ function runSample(brief) {
   const notes = ["Illustrative products and prices from the sample catalog."];
   if (brief.neededBy) notes.push("The sample catalog has no delivery estimates.");
   return {
-    version: 1, mode: "sample", brief, checkedOn: null, gifts,
+    version: 1, mode: "sample", brief, checkedOn: null, gifts: shortlistGifts(ranked, brief),
     notes,
   };
 }
@@ -1848,6 +1892,7 @@ const recipientChoice = select("recipient");
 const customRecipient = select("custom-recipient");
 const interestsInput = select("interests");
 const budgetInput = select("budget");
+const priceComparison = select("compare-price-bands");
 const interestSuggestions = document.querySelectorAll("[data-interest]");
 const surprise = select("surprise-brief");
 const briefStatus = select("brief-status");
@@ -1883,6 +1928,7 @@ let loadedRun;
 const harnessOptions = new Map();
 let runAbort;
 let lastRun;
+let budgetBeforeComparison;
 
 function element(tag, className, text) {
   const node = document.createElement(tag);
@@ -1924,7 +1970,7 @@ function appendThumbnail(card, imageUrl) {
   }
 }
 
-function buildCard(gift) {
+function buildCard(gift, heading = "h3") {
   const card = element("article", "gift-card");
   const image = report.mode === "sample" ? sampleImage(gift.name) : -1;
   if (image >= 0) {
@@ -1935,7 +1981,7 @@ function buildCard(gift) {
   if (report.mode === "live") appendThumbnail(card, gift.imageUrl);
 
   const body = element("div", "card-body");
-  const title = element("h3", "", gift.name);
+  const title = element(heading, "", gift.name);
   const category = element("p", "card-category", [gift.category, gift.merchant].filter(Boolean).join(" · "));
   const reason = element("p", "card-reason", gift.reason);
   const footer = element("div", "card-footer");
@@ -1985,6 +2031,29 @@ function sortedGifts() {
   });
 }
 
+function renderGiftCards() {
+  const gifts = sortedGifts();
+  const compare = report.brief.comparePriceBands === true;
+  cards.classList.toggle("card-grid", !compare);
+  if (!compare) {
+    cards.replaceChildren(...gifts.map((gift) => buildCard(gift)));
+    return;
+  }
+  const groups = usdPriceBandLabels.map((label, band) => ({ label, band }));
+  if (sort.value === "price-high") groups.reverse();
+  groups.push({ label: "Other gifts", band: null });
+  cards.replaceChildren(...groups.flatMap(({ label, band }) => {
+    const matches = gifts.filter(({ price }) => usdPriceBand(price) === band);
+    if (!matches.length) return [];
+    const section = element("section", "price-band");
+    const heading = element("h3", "", label);
+    const grid = element("div", "card-grid");
+    grid.replaceChildren(...matches.map((gift) => buildCard(gift, "h4")));
+    section.append(heading, grid);
+    return [section];
+  }));
+}
+
 function render() {
   const { mode, brief, gifts, notes, checkedOn, discovery, leads = [] } = report;
   select("mode-description").textContent = checkedOn
@@ -1998,7 +2067,7 @@ function render() {
   const discoveryStatus = select("discovery-status");
   discoveryStatus.hidden = !discovery;
   discoveryStatus.textContent = discovery ?? "";
-  cards.replaceChildren(...sortedGifts().map(buildCard));
+  renderGiftCards();
   select("share-results").disabled = !gifts.length && !leads.length;
   select("research-leads").hidden = !leads.length;
   select("leads-summary").textContent = `${leads.length} research ${leads.length === 1 ? "lead" : "leads"}`;
@@ -2103,13 +2172,31 @@ function readBrief() {
     region: destination.text,
     neededBy: select("neededBy").value || null,
     exclude: select("exclude").value.trim(),
+    ...(priceComparison.checked && { comparePriceBands: true }),
   };
 }
 
 function updateBudgetCurrency() {
   const currency = regionCurrencies[searchesLive() ? region.value : "US"];
   select("budget-currency").textContent = currency;
-  budgetInput.min = currency === "USD" ? budgetInput.defaultValue : "1";
+  const inDollars = currency === "USD";
+  budgetInput.min = inDollars ? budgetInput.defaultValue : "1";
+  select("price-comparison-control").hidden = !inDollars;
+  if (!inDollars && priceComparison.checked) {
+    priceComparison.checked = false;
+    updateBudgetLimit();
+  }
+}
+
+function updateBudgetLimit() {
+  if (priceComparison.checked) {
+    budgetBeforeComparison = budgetInput.value;
+    budgetInput.value = usdPriceComparisonCap;
+  } else if (budgetBeforeComparison !== undefined) {
+    budgetInput.value = budgetBeforeComparison;
+    budgetBeforeComparison = undefined;
+  }
+  budgetInput.readOnly = priceComparison.checked;
 }
 
 function showReport(nextReport) {
@@ -2414,6 +2501,8 @@ select("run-demo").addEventListener("click", async () => {
   const scenario = demoScenarios.find(({ id }) => id === demoChoice.value);
   if (!scenario) return;
   showBriefForm();
+  priceComparison.checked = false;
+  updateBudgetLimit();
   fillExampleBrief(scenario.brief);
   message();
   setRunning(true);
@@ -2464,7 +2553,8 @@ function fillExampleBrief({ recipient, occasion, interests, budget }) {
   updateRecipient();
   select("occasion").value = occasion;
   interestsInput.value = interests;
-  budgetInput.value = budget;
+  if (priceComparison.checked) budgetBeforeComparison = String(budget);
+  else budgetInput.value = budget;
   updateBriefPreview();
 }
 
@@ -2484,6 +2574,10 @@ sort.addEventListener("change", render);
 recipientChoice.addEventListener("change", updateRecipient);
 interestsInput.addEventListener("input", updateInterestSuggestions);
 region.addEventListener("change", updateBudgetCurrency);
+priceComparison.addEventListener("change", () => {
+  updateBudgetLimit();
+  updateBriefPreview();
+});
 
 function downloadFile(content, name, type) {
   const url = URL.createObjectURL(new Blob([content], { type }));
