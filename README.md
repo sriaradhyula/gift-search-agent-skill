@@ -18,6 +18,8 @@ cd gift-search-agent-skill
 
 Enter who you’re shopping for, the occasion, and your budget. Pick **Surprise me** for a starting point, then select **Find gifts**. The **Run with** picker also supports Codex, Cursor, OpenCode, and CAIPE. [Local setup and search options](docs/local-options.md)
 
+Choose **Compare $25–$50 and $50–$100** when you want ideas at both price points. The comparison searches up to $100 USD and still includes lower-priced gifts.
+
 Claude Code can search the web. To add Google Shopping results, save a SerpApi key in `~/.config/serpapi.txt`.
 
 ## Install the skill

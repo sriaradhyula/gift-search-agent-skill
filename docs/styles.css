@@ -151,6 +151,8 @@ fieldset { min-inline-size: 0; margin: 0; padding: 0; border: 0; }
 .budget-input { display: flex; align-items: center; border: 1px solid var(--line); border-radius: 8px; padding-left: 9px; }
 .budget-input span { color: var(--muted); font-size: .72rem; font-weight: 700; }
 .budget-input input { height: 38px; border: 0; }
+.price-comparison { display: flex; align-items: start; gap: 8px; margin-bottom: 14px; font-size: .8rem; font-weight: 650; line-height: 1.35; }
+.price-comparison input { flex: none; margin: 2px 0 0; accent-color: var(--action); }
 .optional { margin: 0 0 15px; color: var(--muted); font-size: .8rem; }
 .optional summary { padding-block: 2px 4px; font-weight: 630; }
 .optional[open] summary { margin-bottom: 9px; }
@@ -333,6 +335,8 @@ body:has(.chat-dock:not([hidden])) .dashboard { padding-bottom: 76px; }
 }
 .text-link { padding: 0; border: 0; color: var(--green); background: none; text-decoration: none; font-size: .79rem; font-weight: 700; }
 .text-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+.price-band + .price-band { margin-top: 20px; }
+.price-band h3 { margin-bottom: 9px; color: var(--green); font-size: .99rem; }
 .wipe-session { display: block; margin-top: 13px; color: var(--cranberry-dark); }
 .results-heading { display: flex; justify-content: space-between; align-items: end; gap: 10px; margin-block: 22px 15px; }
 .results-heading > :first-child { min-width: 0; overflow-wrap: anywhere; }
@@ -356,7 +360,7 @@ body:has(.chat-dock:not([hidden])) .dashboard { padding-bottom: 76px; }
 .photo-3, .photo-4, .photo-5 { --y: 100%; }
 .card-body { display: flex; flex: 1; flex-direction: column; padding: 15px; overflow-wrap: anywhere; }
 .card-category { color: var(--green); font-size: .68rem; line-height: 1.35; font-weight: 740; letter-spacing: .055em; text-transform: uppercase; }
-.card-body h3 { margin-top: 5px; font-size: 1rem; line-height: 1.3; letter-spacing: -.023em; }
+.card-body :is(h3, h4) { margin-top: 5px; font-size: 1rem; line-height: 1.3; letter-spacing: -.023em; }
 .card-reason { margin-top: 7px; color: var(--muted); font-size: .82rem; line-height: 1.5; }
 .card-footer { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding-top: 14px; margin-top: auto; }
 .card-price { font-weight: 750; font-size: .95rem; }

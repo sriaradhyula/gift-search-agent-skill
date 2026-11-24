@@ -1,3 +1,5 @@
+import { shortlistGifts } from "./report.js";
+
 export const examples = {
   secretSanta: {
     recipient: "My coworker", occasion: "Secret Santa", interests: "Spicy snacks, tasting kits",
@@ -90,6 +92,18 @@ const catalog = [
     reason: "Three small jars let a coworker try different levels of crunch and heat.",
     caveat: "Check the ingredients for sesame, peanuts, or other allergens.",
   },
+  {
+    name: "Dinner-party mystery game", category: "Games", price: 38, hasCatalogPhoto: false,
+    tags: "party games puzzles group activity detective dinner", occasions: ["White Elephant"],
+    reason: "Gives the recipient a ready-made game night with roles and clues for friends.",
+    caveat: "Check the minimum player count and how much time a game takes.",
+  },
+  {
+    name: "Fold-flat tabletop shuffleboard", category: "Games", price: 68, hasCatalogPhoto: false,
+    tags: "party games desk puzzles group activity tabletop", occasions: ["White Elephant"],
+    reason: "Packs away between gatherings and comes out when people want a quick tournament.",
+    caveat: "Measure the table before choosing a board size.",
+  },
 ];
 
 export const sampleImage = (name) => catalog.findIndex((gift) => gift.name === name && gift.hasCatalogPhoto !== false);
@@ -98,7 +112,7 @@ const words = (text) => new Set(text.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [
 export function runSample(brief) {
   const interests = words(brief.interests);
   const exclusions = brief.exclude.toLowerCase().split(/[,;\n]/).map((term) => term.trim()).filter(Boolean);
-  const gifts = catalog
+  const ranked = catalog
     .filter((gift) => brief.budget === null || gift.price <= brief.budget)
     .filter((gift) => !exclusions.some((term) => `${gift.name} ${gift.tags}`.toLowerCase().includes(term)))
     .map((gift) => {
@@ -108,7 +122,6 @@ export function runSample(brief) {
     })
     .filter(({ matches }) => !interests.size || matches > 0)
     .sort((a, b) => b.score - a.score)
-    .slice(0, 5)
     .map(({ gift: { name, category, price, reason, caveat } }) => ({
       name, category, price, reason, caveat, merchant: null, url: null,
     }));
@@ -116,7 +129,7 @@ export function runSample(brief) {
   const notes = ["Illustrative products and prices from the sample catalog."];
   if (brief.neededBy) notes.push("The sample catalog has no delivery estimates.");
   return {
-    version: 1, mode: "sample", brief, checkedOn: null, gifts,
+    version: 1, mode: "sample", brief, checkedOn: null, gifts: shortlistGifts(ranked, brief),
     notes,
   };
 }

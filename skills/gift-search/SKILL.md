@@ -14,6 +14,8 @@ If the user supplies a gift report and wants to see it in the dashboard, skip to
 
 Capture recipient, occasion, interests, maximum budget and currency, and delivery country or region. Capture any deadline and exclusions. Ask one concise follow-up when a missing constraint could change the shortlist materially. For a U.S. gift exchange with no budget given, start with a $25 total cap and state the assumption. Honor any cap the user gives, including a lower one.
 
+If the user asks to compare $25–$50 and $50–$100 or the brief sets `comparePriceBands`, scout both ranges within the authorized total cap. For a new comparison brief, set `comparePriceBands` to `true` and use $100 as the cap when the user gives no other limit. Include a verified option in each range when available and keep useful gifts under $25 eligible. Group by item price and include known shipping in the total budget check.
+
 ## Scout, verify, and rank
 
 Assign scouts with different areas of expertise tailored to the gift brief, and an independent retailer reviewer. For each research turn, give the new scouts distinct personas and assignments shaped by the earlier findings and review decisions. Keep the reviewer across turns. Have each role post short public highlights, sources, and open questions to the shared board as work progresses. Report what each role did and share the board on request.
