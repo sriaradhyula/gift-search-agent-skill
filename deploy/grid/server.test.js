@@ -31,6 +31,14 @@ test("Retailer photos use the listing's HTTPS preview metadata", () => {
     "https://shop.example.com/media/puzzle.webp?width=400&v=2");
   assert.equal(retailerThumbnailUrl('<meta property="og:image" content="http://shop.example.com/puzzle.png">',
     "https://shop.example.com/products/puzzle"), null);
+  const productData = `<script type="application/ld+json">{
+    "@graph":[
+      {"@type":"Organization","image":"https://shop.example.com/logo.png"},
+      {"@type":["Product"],"image":["http://shop.example.com/puzzle.png",{"contentUrl":"https://cdn.example.com/puzzle.jpg"}]}
+    ]
+  }</script>`;
+  assert.equal(retailerThumbnailUrl(productData, "https://shop.example.com/products/puzzle")?.href,
+    "https://cdn.example.com/puzzle.jpg");
 });
 
 test("Refinement keeps the previous board and rechecks earlier picks against the edited brief", async () => {
