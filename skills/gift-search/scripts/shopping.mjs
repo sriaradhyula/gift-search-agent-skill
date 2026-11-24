@@ -7,6 +7,10 @@ const countries = new Map([
   ["United States", "US"], ["Canada", "CA"], ["United Kingdom", "GB"], ["Australia", "AU"],
   ["Germany", "DE"], ["France", "FR"], ["India", "IN"], ["Japan", "JP"],
 ]);
+const exchangeAngles = new Map([
+  ["secret santa", "Secret Santa gifts clever hobby kits"],
+  ["white elephant", "White Elephant gifts small tabletop games"],
+]);
 
 export function searchCountry(region) {
   return countries.get(region.trim());
@@ -54,9 +58,11 @@ export async function discoverShopping(brief, apiKey, signal) {
 
   const interests = brief.interests.trim();
   const recipient = brief.recipient.trim();
-  const giftSearch = [brief.occasion.trim(), "gifts", interests || (recipient && `for ${recipient}`)].filter(Boolean).join(" ");
+  const occasion = brief.occasion.trim();
+  const giftSearch = [occasion, "gifts", interests || (recipient && `for ${recipient}`)].filter(Boolean).join(" ");
+  const exchangeAngle = exchangeAngles.get(occasion.toLowerCase().replace(/[-\s]+/g, " "));
   const results = await Promise.allSettled(
-    [interests || `practical ${giftSearch}`, giftSearch].map((query) => searchShopping(query, brief, country, apiKey, signal)),
+    [exchangeAngle || interests || `practical ${giftSearch}`, giftSearch].map((query) => searchShopping(query, brief, country, apiKey, signal)),
   );
   signal.throwIfAborted();
   const completed = results.filter((result) => result.status === "fulfilled");

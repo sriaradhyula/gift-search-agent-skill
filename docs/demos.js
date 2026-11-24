@@ -2,6 +2,35 @@ import { examples, runSample } from "./sample.js";
 
 export const demoScenarios = [
   {
+    id: "white-elephant",
+    title: "White Elephant under $25",
+    brief: examples.whiteElephant,
+    turns: [
+      {
+        scouts: [
+          { name: "Party Game Scout", persona: "Quick group game researcher", focus: "Find a gift people can open and play at the exchange." },
+          { name: "Puzzle Scout", persona: "Pocket puzzle specialist", focus: "Find a small gift that suits an unknown recipient." },
+        ],
+        findings: [
+          { names: ["Tabletop skee-ball set"], note: "The skee-ball set lists at $24, but shipping is $7." },
+          { names: ["Pocket escape-room puzzle tin"], note: "The $18 tin has a few clues people can solve together." },
+        ],
+        review: "Keep the puzzle tin. Find a playable desk game that leaves room for shipping.",
+      },
+      {
+        scouts: [
+          { name: "Desk Game Scout", persona: "Compact game specialist", focus: "Find a group game small enough to play at work." },
+          { name: "Setup Scout", persona: "Game setup reviewer", focus: "Check whether the game needs batteries, extra equipment, or a large table." },
+        ],
+        findings: [
+          { names: ["Mini desktop curling set"], note: "The $22 curling set includes a roll-up mat and requires no batteries." },
+          { names: ["Mini desktop curling set"], note: "A small flat table is enough to start a round." },
+        ],
+        review: "Shortlist the curling set and puzzle tin. Both can be played at the exchange. Check final delivery costs.",
+      },
+    ],
+  },
+  {
     id: "coffee",
     title: "Coffee under $75",
     brief: examples.coffee,
@@ -124,7 +153,7 @@ export const demoScenarios = [
 ];
 
 export function createDemoRun(scenario) {
-  const report = runSample({ ...scenario.brief, occasion: "Christmas" });
+  const report = runSample(scenario.brief);
   const reviewer = {
     id: "review", name: "Gift Reviewer", persona: "Retail and budget specialist",
     focus: "Check the fit and total cost, then share feedback for the next turn.",

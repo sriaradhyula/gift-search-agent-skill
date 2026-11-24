@@ -43,6 +43,7 @@
     <section class="intro" aria-labelledby="page-title">
       <div>
         <h1 id="page-title">Find <em>the gift.</em></h1>
+        <p>Whether you’re looking for a Secret Santa gift or something unique for a family member, collaborate with agents to find ideas and refine your search.</p>
       </div>
     </section>
     <div id="demo-controls" class="demo-controls" hidden>
@@ -66,9 +67,9 @@
             <div class="field">
               <label for="recipient">Who’s it for?</label>
               <select id="recipient" name="recipient">
-                <option selected>My sister</option><option>My brother</option><option>My partner</option>
+                <option selected>My coworker</option><option>My sister</option><option>My brother</option><option>My partner</option>
                 <option>My mom</option><option>My dad</option><option>My child</option>
-                <option>A friend</option><option>My coworker</option><option>Myself</option>
+                <option>A friend</option><option>Myself</option>
                 <option value="">Someone else…</option>
               </select>
             </div>
@@ -79,19 +80,21 @@
             <div class="field">
               <label for="occasion">Occasion</label>
               <select id="occasion" name="occasion">
-                <option selected>Christmas</option><option>Birthday</option><option>Holiday</option><option>Housewarming</option>
+                <option selected>Christmas</option><option>Secret Santa</option><option>White Elephant</option>
+                <option>Birthday</option><option>Holiday</option><option>Housewarming</option>
                 <option>Thank you</option><option>Anniversary</option><option>Just because</option>
               </select>
             </div>
             <div class="field">
               <label for="interests">Interests <span class="field-optional">optional</span></label>
-              <input id="interests" name="interests" placeholder="e.g. Coffee, hiking" value="Coffee, slow mornings" maxlength="240">
+              <input id="interests" name="interests" placeholder="e.g. puzzles, spicy snacks" maxlength="240">
               <div class="interest-suggestions" role="group" aria-label="Suggested interests">
                 <button class="chip" type="button" data-interest="Coffee &amp; tea" aria-pressed="false">Coffee &amp; tea</button>
                 <button class="chip" type="button" data-interest="Cooking &amp; baking" aria-pressed="false">Cooking &amp; baking</button>
                 <button class="chip" type="button" data-interest="Outdoors" aria-pressed="false">Outdoors</button>
                 <button class="chip" type="button" data-interest="Gardening" aria-pressed="false">Gardening</button>
                 <button class="chip" type="button" data-interest="Arts &amp; crafts" aria-pressed="false">Arts &amp; crafts</button>
+                <button class="chip" type="button" data-interest="Puzzles &amp; games" aria-pressed="false">Puzzles &amp; games</button>
                 <button class="chip" type="button" data-interest="" aria-pressed="false">I’m not sure</button>
               </div>
             </div>
@@ -100,7 +103,7 @@
                 <label for="budget">Max budget</label>
                 <div class="budget-input">
                   <span id="budget-currency" aria-hidden="true">USD</span>
-                  <input type="number" id="budget" name="budget" min="1" max="1000000" step="0.01" value="75" required aria-describedby="budget-currency">
+                  <input type="number" id="budget" name="budget" min="25" max="1000000" step="0.01" value="25" required aria-describedby="budget-currency">
                 </div>
               </div>
               <div class="field" id="region-field" hidden>

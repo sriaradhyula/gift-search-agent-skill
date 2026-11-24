@@ -105,6 +105,7 @@ h2 { letter-spacing: -0.035em; }
 .intro > div:first-child { max-width: 60%; }
 .intro h1 { font-size: clamp(1.8rem, 3.35vw, 3rem); }
 .intro h1 em { color: var(--gold); white-space: nowrap; }
+.intro p { max-width: 50ch; margin-top: 7px; font-size: .9rem; line-height: 1.4; }
 .primary, .secondary {
   min-height: 42px;
   padding: 10px 15px;

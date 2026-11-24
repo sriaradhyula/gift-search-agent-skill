@@ -1,4 +1,12 @@
 export const examples = {
+  secretSanta: {
+    recipient: "My coworker", occasion: "Secret Santa", interests: "Spicy snacks, tasting kits",
+    budget: 25, currency: "USD", region: "United States", neededBy: null, exclude: "",
+  },
+  whiteElephant: {
+    recipient: "My coworker", occasion: "White Elephant", interests: "Party games, desk puzzles",
+    budget: 25, currency: "USD", region: "United States", neededBy: null, exclude: "",
+  },
   coffee: {
     recipient: "My sister", occasion: "Christmas", interests: "Coffee, slow mornings",
     budget: 75, currency: "USD", region: "United States", neededBy: null, exclude: "",
@@ -63,6 +71,24 @@ const catalog = [
     tags: "dark chocolate truffles tasting flights cacao sampler", occasions: ["Christmas"],
     reason: "Nine dark chocolate truffles and a tasting guide give your friend a few flavors to compare.",
     caveat: "Check the shipping fee and arrival date before ordering.",
+  },
+  {
+    name: "Mini desktop curling set", category: "Games", price: 22, hasCatalogPhoto: false,
+    tags: "party games desk puzzles group activity tabletop shuffleboard", occasions: ["White Elephant"],
+    reason: "Turns a break-room table into a two-minute curling rink.",
+    caveat: "Needs a flat table and enough space to roll out the mat.",
+  },
+  {
+    name: "Pocket escape-room puzzle tin", category: "Puzzles", price: 18, hasCatalogPhoto: false,
+    tags: "party games desk puzzles group activity riddles", occasions: ["White Elephant", "Secret Santa"],
+    reason: "A few miniature puzzles are easy to pass around during the exchange.",
+    caveat: "Check whether the clues are reusable if they plan to pass it on.",
+  },
+  {
+    name: "Chili crisp tasting trio", category: "Food & drink", price: 19, hasCatalogPhoto: false,
+    tags: "spicy snacks tasting kits chili crisp sampler cooking", occasions: ["Secret Santa", "Christmas"],
+    reason: "Three small jars let a coworker try different levels of crunch and heat.",
+    caveat: "Check the ingredients for sesame, peanuts, or other allergens.",
   },
 ];
 

@@ -153,6 +153,7 @@ h2 { letter-spacing: -0.035em; }
 .intro > div:first-child { max-width: 60%; }
 .intro h1 { font-size: clamp(1.8rem, 3.35vw, 3rem); }
 .intro h1 em { color: var(--gold); white-space: nowrap; }
+.intro p { max-width: 50ch; margin-top: 7px; font-size: .9rem; line-height: 1.4; }
 .primary, .secondary {
   min-height: 42px;
   padding: 10px 15px;
@@ -556,6 +557,7 @@ dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
     <section class="intro" aria-labelledby="page-title">
       <div>
         <h1 id="page-title">Find <em>the gift.</em></h1>
+        <p>Whether you’re looking for a Secret Santa gift or something unique for a family member, collaborate with agents to find ideas and refine your search.</p>
       </div>
     </section>
     <div id="demo-controls" class="demo-controls" hidden>
@@ -579,9 +581,9 @@ dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
             <div class="field">
               <label for="recipient">Who’s it for?</label>
               <select id="recipient" name="recipient">
-                <option selected>My sister</option><option>My brother</option><option>My partner</option>
+                <option selected>My coworker</option><option>My sister</option><option>My brother</option><option>My partner</option>
                 <option>My mom</option><option>My dad</option><option>My child</option>
-                <option>A friend</option><option>My coworker</option><option>Myself</option>
+                <option>A friend</option><option>Myself</option>
                 <option value="">Someone else…</option>
               </select>
             </div>
@@ -592,19 +594,21 @@ dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
             <div class="field">
               <label for="occasion">Occasion</label>
               <select id="occasion" name="occasion">
-                <option selected>Christmas</option><option>Birthday</option><option>Holiday</option><option>Housewarming</option>
+                <option selected>Christmas</option><option>Secret Santa</option><option>White Elephant</option>
+                <option>Birthday</option><option>Holiday</option><option>Housewarming</option>
                 <option>Thank you</option><option>Anniversary</option><option>Just because</option>
               </select>
             </div>
             <div class="field">
               <label for="interests">Interests <span class="field-optional">optional</span></label>
-              <input id="interests" name="interests" placeholder="e.g. Coffee, hiking" value="Coffee, slow mornings" maxlength="240">
+              <input id="interests" name="interests" placeholder="e.g. puzzles, spicy snacks" maxlength="240">
               <div class="interest-suggestions" role="group" aria-label="Suggested interests">
                 <button class="chip" type="button" data-interest="Coffee &amp; tea" aria-pressed="false">Coffee &amp; tea</button>
                 <button class="chip" type="button" data-interest="Cooking &amp; baking" aria-pressed="false">Cooking &amp; baking</button>
                 <button class="chip" type="button" data-interest="Outdoors" aria-pressed="false">Outdoors</button>
                 <button class="chip" type="button" data-interest="Gardening" aria-pressed="false">Gardening</button>
                 <button class="chip" type="button" data-interest="Arts &amp; crafts" aria-pressed="false">Arts &amp; crafts</button>
+                <button class="chip" type="button" data-interest="Puzzles &amp; games" aria-pressed="false">Puzzles &amp; games</button>
                 <button class="chip" type="button" data-interest="" aria-pressed="false">I’m not sure</button>
               </div>
             </div>
@@ -613,7 +617,7 @@ dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
                 <label for="budget">Max budget</label>
                 <div class="budget-input">
                   <span id="budget-currency" aria-hidden="true">USD</span>
-                  <input type="number" id="budget" name="budget" min="1" max="1000000" step="0.01" value="75" required aria-describedby="budget-currency">
+                  <input type="number" id="budget" name="budget" min="25" max="1000000" step="0.01" value="25" required aria-describedby="budget-currency">
                 </div>
               </div>
               <div class="field" id="region-field" hidden>
@@ -880,6 +884,14 @@ function formatMoney(value, currency) {
 }
 
 const examples = {
+  secretSanta: {
+    recipient: "My coworker", occasion: "Secret Santa", interests: "Spicy snacks, tasting kits",
+    budget: 25, currency: "USD", region: "United States", neededBy: null, exclude: "",
+  },
+  whiteElephant: {
+    recipient: "My coworker", occasion: "White Elephant", interests: "Party games, desk puzzles",
+    budget: 25, currency: "USD", region: "United States", neededBy: null, exclude: "",
+  },
   coffee: {
     recipient: "My sister", occasion: "Christmas", interests: "Coffee, slow mornings",
     budget: 75, currency: "USD", region: "United States", neededBy: null, exclude: "",
@@ -945,6 +957,24 @@ const catalog = [
     reason: "Nine dark chocolate truffles and a tasting guide give your friend a few flavors to compare.",
     caveat: "Check the shipping fee and arrival date before ordering.",
   },
+  {
+    name: "Mini desktop curling set", category: "Games", price: 22, hasCatalogPhoto: false,
+    tags: "party games desk puzzles group activity tabletop shuffleboard", occasions: ["White Elephant"],
+    reason: "Turns a break-room table into a two-minute curling rink.",
+    caveat: "Needs a flat table and enough space to roll out the mat.",
+  },
+  {
+    name: "Pocket escape-room puzzle tin", category: "Puzzles", price: 18, hasCatalogPhoto: false,
+    tags: "party games desk puzzles group activity riddles", occasions: ["White Elephant", "Secret Santa"],
+    reason: "A few miniature puzzles are easy to pass around during the exchange.",
+    caveat: "Check whether the clues are reusable if they plan to pass it on.",
+  },
+  {
+    name: "Chili crisp tasting trio", category: "Food & drink", price: 19, hasCatalogPhoto: false,
+    tags: "spicy snacks tasting kits chili crisp sampler cooking", occasions: ["Secret Santa", "Christmas"],
+    reason: "Three small jars let a coworker try different levels of crunch and heat.",
+    caveat: "Check the ingredients for sesame, peanuts, or other allergens.",
+  },
 ];
 
 const sampleImage = (name) => catalog.findIndex((gift) => gift.name === name && gift.hasCatalogPhoto !== false);
@@ -978,6 +1008,35 @@ function runSample(brief) {
 
 
 const demoScenarios = [
+  {
+    id: "white-elephant",
+    title: "White Elephant under $25",
+    brief: examples.whiteElephant,
+    turns: [
+      {
+        scouts: [
+          { name: "Party Game Scout", persona: "Quick group game researcher", focus: "Find a gift people can open and play at the exchange." },
+          { name: "Puzzle Scout", persona: "Pocket puzzle specialist", focus: "Find a small gift that suits an unknown recipient." },
+        ],
+        findings: [
+          { names: ["Tabletop skee-ball set"], note: "The skee-ball set lists at $24, but shipping is $7." },
+          { names: ["Pocket escape-room puzzle tin"], note: "The $18 tin has a few clues people can solve together." },
+        ],
+        review: "Keep the puzzle tin. Find a playable desk game that leaves room for shipping.",
+      },
+      {
+        scouts: [
+          { name: "Desk Game Scout", persona: "Compact game specialist", focus: "Find a group game small enough to play at work." },
+          { name: "Setup Scout", persona: "Game setup reviewer", focus: "Check whether the game needs batteries, extra equipment, or a large table." },
+        ],
+        findings: [
+          { names: ["Mini desktop curling set"], note: "The $22 curling set includes a roll-up mat and requires no batteries." },
+          { names: ["Mini desktop curling set"], note: "A small flat table is enough to start a round." },
+        ],
+        review: "Shortlist the curling set and puzzle tin. Both can be played at the exchange. Check final delivery costs.",
+      },
+    ],
+  },
   {
     id: "coffee",
     title: "Coffee under $75",
@@ -1101,7 +1160,7 @@ const demoScenarios = [
 ];
 
 function createDemoRun(scenario) {
-  const report = runSample({ ...scenario.brief, occasion: "Christmas" });
+  const report = runSample(scenario.brief);
   const reviewer = {
     id: "review", name: "Gift Reviewer", persona: "Retail and budget specialist",
     focus: "Check the fit and total cost, then share feedback for the next turn.",
@@ -1788,6 +1847,7 @@ const form = select("gift-form");
 const recipientChoice = select("recipient");
 const customRecipient = select("custom-recipient");
 const interestsInput = select("interests");
+const budgetInput = select("budget");
 const interestSuggestions = document.querySelectorAll("[data-interest]");
 const surprise = select("surprise-brief");
 const briefStatus = select("brief-status");
@@ -1977,7 +2037,7 @@ function updateMode() {
   select("demo-controls").hidden = !demoMode.checked;
   select("region-field").hidden = !liveSearch;
   region.disabled = !liveSearch;
-  select("budget-currency").textContent = regionCurrencies[liveSearch ? region.value : "US"];
+  updateBudgetCurrency();
   const showResearchTurns = harnessMode && liveSearch;
   select("harness-setting").hidden = !showResearchTurns;
   select("research-setting").hidden = !showResearchTurns;
@@ -2038,12 +2098,18 @@ function readBrief() {
     recipient: recipientChoice.value || customRecipient.value.trim(),
     occasion: select("occasion").value,
     interests: interestsInput.value.trim(),
-    budget: select("budget").valueAsNumber,
+    budget: budgetInput.valueAsNumber,
     currency: regionCurrencies[destination.value],
     region: destination.text,
     neededBy: select("neededBy").value || null,
     exclude: select("exclude").value.trim(),
   };
+}
+
+function updateBudgetCurrency() {
+  const currency = regionCurrencies[searchesLive() ? region.value : "US"];
+  select("budget-currency").textContent = currency;
+  budgetInput.min = currency === "USD" ? budgetInput.defaultValue : "1";
 }
 
 function showReport(nextReport) {
@@ -2392,13 +2458,13 @@ function updateBriefPreview() {
   if (validBrief(brief) && brief.recipient) showSampleBrief(brief);
 }
 
-function fillExampleBrief({ recipient, interests, budget }) {
+function fillExampleBrief({ recipient, occasion, interests, budget }) {
   recipientChoice.value = [...recipientChoice.options].some((option) => option.value === recipient) ? recipient : "";
   if (!recipientChoice.value) customRecipient.value = recipient;
   updateRecipient();
-  select("occasion").value = "Christmas";
+  select("occasion").value = occasion;
   interestsInput.value = interests;
-  select("budget").value = budget;
+  budgetInput.value = budget;
   updateBriefPreview();
 }
 
@@ -2417,7 +2483,7 @@ for (const button of interestSuggestions) {
 sort.addEventListener("change", render);
 recipientChoice.addEventListener("change", updateRecipient);
 interestsInput.addEventListener("input", updateInterestSuggestions);
-region.addEventListener("change", () => { select("budget-currency").textContent = regionCurrencies[region.value]; });
+region.addEventListener("change", updateBudgetCurrency);
 
 function downloadFile(content, name, type) {
   const url = URL.createObjectURL(new Blob([content], { type }));
