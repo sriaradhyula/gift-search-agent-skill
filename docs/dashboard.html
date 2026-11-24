@@ -260,8 +260,34 @@
         <textarea id="claude-question" rows="2" placeholder="Ask anything…" required></textarea>
         <button id="send-claude" class="secondary" type="submit">Send</button>
       </div>
+      <button id="refine-search" class="chat-link refine-search" type="button" hidden>Refine search</button>
     </form>
   </aside>
+  <dialog id="refine-dialog" aria-labelledby="refine-title">
+    <form id="refine-form" autocomplete="off">
+      <h2 id="refine-title">Refine search</h2>
+      <p>Review the brief before sending it to the research team for one more turn.</p>
+      <div class="refine-fields">
+        <div class="field refine-wide"><label for="refine-focus">Research focus</label><textarea id="refine-focus" name="focus" rows="3" maxlength="600" required autofocus></textarea></div>
+        <div class="field"><label for="refine-recipient">Recipient</label><input id="refine-recipient" name="recipient" maxlength="100" required></div>
+        <div class="field"><label for="refine-occasion">Occasion</label><input id="refine-occasion" name="occasion" maxlength="100" required></div>
+        <div class="field refine-wide"><label for="refine-interests">Interests</label><input id="refine-interests" name="interests" maxlength="240"></div>
+        <div class="field"><label for="refine-budget">Max budget</label><input type="number" id="refine-budget" name="budget" min="0.01" max="1000000" step="0.01" required></div>
+        <div class="field"><label for="refine-currency">Currency</label><input id="refine-currency" name="currency" pattern="[A-Za-z]{3}" maxlength="3" required></div>
+        <div class="field"><label for="refine-region">Delivery region</label><input id="refine-region" name="region" maxlength="80" required></div>
+        <div class="field"><label for="refine-needed-by">Needed by</label><input type="date" id="refine-needed-by" name="neededBy"></div>
+        <div class="field refine-wide"><label for="refine-exclude">Exclusions</label><input id="refine-exclude" name="exclude" maxlength="200"></div>
+        <label id="refine-comparison-control" class="price-comparison refine-wide">
+          <input type="checkbox" id="refine-compare-price-bands" name="comparePriceBands"> Compare $25–$50 and $50–$100
+        </label>
+      </div>
+      <p id="refine-status" class="brief-status" role="status"></p>
+      <div class="refine-actions">
+        <button id="cancel-refinement" class="secondary" type="button">Cancel</button>
+        <button class="primary" type="submit">Run follow-up</button>
+      </div>
+    </form>
+  </dialog>
   <dialog id="gift-detail" aria-labelledby="detail-title">
     <form method="dialog"><button class="close-button" aria-label="Close gift details">×</button></form>
     <p class="card-category" id="detail-category"></p>

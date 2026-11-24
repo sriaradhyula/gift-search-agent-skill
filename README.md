@@ -44,4 +44,6 @@ The skill creates an HTML dashboard after each search, tries to open it in your 
 
 Watch the handoffs in **Multi-agent Collaboration** and resume a previous search from **Search history**.
 
+Use **Refine search** in chat to review a new focus, edit the brief, and run another verified research turn.
+
 [Documentation](https://sriaradhyula.github.io/gift-search-agent-skill/) · [Architecture](https://sriaradhyula.github.io/gift-search-agent-skill/architecture.html) · [Apache 2.0 license](LICENSE)

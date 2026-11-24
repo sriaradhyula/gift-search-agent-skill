@@ -23,6 +23,8 @@ const savedRuns = select("saved-runs");
 const region = select("region");
 const dialog = select("gift-detail");
 const linkInspection = select("link-inspection");
+const refineDialog = select("refine-dialog");
+const refineForm = select("refine-form");
 const demoChoice = select("demo-scenario");
 const gridMount = document.querySelector('meta[name="gift-search-mount"]')?.content;
 const wipedSessionKey = "gift-search-session-wiped";
@@ -45,6 +47,8 @@ let historyEnabled = false;
 let wipeEnabled = false;
 let loadingRun = false;
 let loadedRun;
+let displayedRunId;
+let refinementSource;
 const harnessOptions = new Map();
 let runAbort;
 let lastRun;
@@ -342,8 +346,9 @@ function updateBudgetLimit() {
   budgetInput.readOnly = priceComparison.checked;
 }
 
-function showReport(nextReport) {
+function showReport(nextReport, runId) {
   report = nextReport;
+  displayedRunId = runId;
   sort.value = "recommended";
   render();
 }
@@ -353,9 +358,7 @@ function showSampleBrief(brief) {
   showReport(runSample(brief));
 }
 
-function openReport(nextReport) {
-  const { brief } = validateReport(nextReport);
-  resetTeam(teamIntroduction);
+function showReportBrief(brief, focus) {
   const fields = [
     ["Recipient", brief.recipient],
     ["Occasion", brief.occasion],
@@ -364,6 +367,7 @@ function openReport(nextReport) {
     ["Ship to", brief.region],
     ["Needed by", brief.neededBy],
     ["Exclusions", brief.exclude],
+    ["Research focus", focus],
   ];
   const list = select("report-brief-fields");
   list.replaceChildren(...fields.filter(([, value]) => value).map(([label, value]) => {
@@ -373,11 +377,17 @@ function openReport(nextReport) {
   }));
   form.hidden = true;
   surprise.hidden = true;
-  loadedRun = undefined;
-  select("resume-run").hidden = true;
   briefStatus.textContent = "";
   select("report-brief").hidden = false;
-  showReport(nextReport);
+}
+
+function openReport(nextReport, saved) {
+  const { brief } = validateReport(nextReport);
+  resetTeam(teamIntroduction);
+  showReportBrief(brief, saved?.refinementFocus);
+  loadedRun = undefined;
+  select("resume-run").hidden = true;
+  showReport(nextReport, saved?.id);
 }
 
 function showBriefForm() {
@@ -437,6 +447,7 @@ function updateTeamActions() {
   select("continue-run").disabled = running || loadingRun || !canResume;
   select("additional-turns").disabled = running || loadingRun || !canResume;
   select("new-search").disabled = running || loadingRun;
+  select("refine-search").disabled = running || loadingRun;
 }
 
 select("stop-run").addEventListener("click", () => runAbort?.abort());
@@ -486,7 +497,7 @@ select("load-run").addEventListener("click", async () => {
   updateTeamActions();
   try {
     const saved = await readHistory(liveApi(`runs/${encodeURIComponent(savedRuns.value)}`));
-    openReport(saved.report);
+    openReport(saved.report, saved);
     loadedRun = saved;
     if (harnessOptions.get(saved.harness)?.available) harnessChoice.value = saved.harness;
     updateChatVisibility();
@@ -494,7 +505,7 @@ select("load-run").addEventListener("click", async () => {
     restoreTimeline(`Saved ${harness.label} run`, saved.events, harness);
     if (saved.status === "complete") finishTeam(saved.report.gifts.length);
     else if (saved.status !== "running") stopTeam();
-    lastRun = { events: saved.events, report: saved.report, harness, completed: saved.status === "complete" };
+    lastRun = { id: saved.id, events: saved.events, report: saved.report, harness, completed: saved.status === "complete" };
     const summary = `${saved.completedTurns} ${saved.completedTurns === 1 ? "turn" : "turns"} saved.`;
     select("history-status").textContent = saved.status === "running" ? "This run is still active."
       : `${summary}${saved.status === "complete" ? "" : " Continue from the last completed turn."}`;
@@ -560,9 +571,13 @@ async function startSearch(body, saved) {
         }
       });
       if (!completed) throw new Error("The agent team did not finish the shortlist.");
-      showReport(completed);
+      if (body.refinement) {
+        showReportBrief(completed.brief, body.refinement.focus);
+        select("additional-turns").value = "1";
+      }
+      showReport(completed, runId);
       finishTeam(completed.gifts.length);
-      if (events.length) lastRun = { events, report: completed, harness, completed: true };
+      if (events.length) lastRun = { id: runId, events, report: completed, harness, completed: true };
     } else {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Live search could not finish.");
@@ -574,7 +589,7 @@ async function startSearch(body, saved) {
   } finally {
     const stopped = runAbort?.signal.aborted;
     runAbort = undefined;
-    if (saved && runId && historyEnabled) {
+    if ((saved || body.refinement) && runId && historyEnabled) {
       try {
         loadedRun = await readHistory(liveApi(`runs/${encodeURIComponent(runId)}`));
         if (stopped && loadedRun.status === "running") loadedRun.status = "stopped";
@@ -593,9 +608,9 @@ select("replay-run").addEventListener("click", async () => {
   message();
   setRunning(true);
   try {
-    const { events, report, harness, completed } = lastRun;
+    const { id, events, report, harness, completed } = lastRun;
     await replayTimeline(events, `Replay · ${harness.label}`, report.gifts.length, { consoleLabel: `${harness.label} console`, completed });
-    showReport(report);
+    showReport(report, id);
   } finally {
     setRunning(false);
   }
@@ -658,21 +673,85 @@ select("run-demo").addEventListener("click", async () => {
   }
 });
 
+function currentChatBrief() {
+  return report.mode === "sample" && !form.hidden ? readBrief() : report.brief;
+}
+
 function chatContext() {
   return {
     research: {
+      runId: displayedRunId,
       activeTurn: select("team-turn").hidden ? null : select("team-turn").textContent,
       inProgress: Boolean(runAbort),
       handoffs: recentResearchNotes(),
     },
     latestShortlist: {
       mode: report.mode,
-      brief: report.brief,
+      brief: currentChatBrief(),
       gifts: report.gifts.slice(0, 5).map(({ name, merchant, price, url, caveat }) => ({ name, merchant, price, url, caveat })),
       notes: report.notes.slice(0, 8).map((note) => note.slice(0, 500)),
     },
   };
 }
+
+function updateRefineCurrency() {
+  const comparison = refineForm.elements.namedItem("comparePriceBands");
+  const usd = refineForm.elements.namedItem("currency").value.trim().toUpperCase() === "USD";
+  select("refine-comparison-control").hidden = !usd;
+  comparison.disabled = !usd;
+}
+
+async function openRefinement(suggestion) {
+  if (!searchesLive() || running || loadingRun || refineDialog.open) return;
+  const runId = displayedRunId;
+  const currentBrief = currentChatBrief();
+  loadingRun = true;
+  updateTeamActions();
+  try {
+    const saved = runId && historyEnabled ? await readHistory(liveApi(`runs/${encodeURIComponent(runId)}`)) : undefined;
+    if (saved?.status === "running") throw new Error("Wait for this search to finish before refining it.");
+    const brief = saved?.report.brief ?? currentBrief;
+    const fields = refineForm.elements;
+    for (const name of ["recipient", "occasion", "interests", "budget", "currency", "region", "neededBy", "exclude"]) {
+      fields.namedItem(name).value = brief[name] ?? "";
+    }
+    const sameBrief = suggestion && suggestion.context.research.runId === runId
+      && JSON.stringify(suggestion.context.latestShortlist.brief) === JSON.stringify(brief);
+    fields.namedItem("focus").value = sameBrief ? suggestion.focus : "";
+    fields.namedItem("comparePriceBands").checked = brief.comparePriceBands === true;
+    updateRefineCurrency();
+    refinementSource = saved;
+    select("refine-status").textContent = "";
+    refineDialog.showModal();
+  } catch (error) {
+    message(error.message || "Could not open the refinement brief.");
+  } finally {
+    loadingRun = false;
+    updateTeamActions();
+  }
+}
+
+select("refine-currency").addEventListener("input", updateRefineCurrency);
+select("cancel-refinement").addEventListener("click", () => refineDialog.close());
+refineForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (running || loadingRun || !searchesLive()) return;
+  const { focus, ...fields } = Object.fromEntries(new FormData(refineForm));
+  const brief = {
+    ...fields, recipient: fields.recipient.trim(), occasion: fields.occasion.trim(), interests: fields.interests.trim(),
+    budget: Number(fields.budget), currency: fields.currency.trim().toUpperCase(), region: fields.region.trim(),
+    neededBy: fields.neededBy || null, exclude: fields.exclude.trim(),
+    ...(fields.comparePriceBands && { comparePriceBands: true }),
+  };
+  if (!focus.trim() || !validBrief(brief) || !brief.recipient || !brief.occasion || !brief.region) {
+    select("refine-status").textContent = "Enter a valid brief and research focus.";
+    return;
+  }
+  const saved = refinementSource;
+  const refinement = { brief, focus: focus.trim(), ...(saved && { expectedUpdatedAt: saved.updatedAt }) };
+  refineDialog.close();
+  await startSearch({ refinement, researchTurns: 1, ...(saved && { runId: saved.id }) }, saved);
+});
 
 function updateInterestSuggestions() {
   const chosen = interestsInput.value.trim().toLowerCase();
@@ -762,6 +841,7 @@ async function checkLiveAvailability() {
       if (harnessChoice.value) enableChat({
         endpoint: liveApi("chat"), getContext: chatContext, getHarness: selectedHarness, onActivity: showTeamEvent,
         onInspectLink: inspectLink,
+        onRefine: config.refinements === true ? openRefinement : undefined,
       });
       historyEnabled = config.history === true;
       if (gridMount && historyEnabled) select("search-history").open = true;

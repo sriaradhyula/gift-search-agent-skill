@@ -94,17 +94,23 @@ function proposals(result, seeds) {
 }
 
 export async function runGiftTeam(brief, {
-  researchTurns: nextTurns = 1, seeds = [], plan, scout, review, signal, resume,
+  researchTurns: nextTurns = 1, seeds = [], plan, scout, review, signal, resume, focus, recheckGifts,
   onEvent = () => {}, onCheckpoint = async () => {},
 }) {
   if (!Number.isInteger(nextTurns) || nextTurns < 1 || nextTurns > MAX_RESEARCH_TURNS) {
     throw new Error(`Choose between 1 and ${MAX_RESEARCH_TURNS} research turns.`);
   }
   const saved = resume ? structuredClone(resume) : {};
-  const { board = [], handoff = [], notes = [], previousScouts = [], completedTurns = 0 } = saved;
-  const verified = new Map(saved.verified);
-  const reviewReasons = new Map(saved.reviewReasons);
-  const pending = new Set(saved.pending);
+  const { board = [], previousScouts = [], completedTurns = 0 } = saved;
+  const refining = recheckGifts !== undefined;
+  const rechecks = (recheckGifts ?? []).slice(0, 5).map(({ name, merchant, url, imageUrl }, candidateId) => ({
+    name, merchant, url, imageUrl, candidateId, fromShopping: false, scouts: [],
+  }));
+  const handoff = refining ? [...rechecks] : (saved.handoff ?? []);
+  const notes = refining ? [] : (saved.notes ?? []);
+  const verified = new Map(refining ? [] : saved.verified);
+  const reviewReasons = new Map(refining ? [] : saved.reviewReasons);
+  const pending = new Set(refining ? [] : saved.pending);
   let reviewer = saved.reviewer;
   const researchTurns = completedTurns + nextTurns;
 
@@ -145,6 +151,7 @@ export async function runGiftTeam(brief, {
   for (let turn = completedTurns + 1; turn <= researchTurns; turn++) {
     signal?.throwIfAborted();
     onEvent({ kind: "planning-start", turn, researchTurns });
+    if (refining) post(turn, "Coordinator", `Refined brief · ${focus}`, "update");
     let team;
     let planned = true;
     try {
@@ -234,6 +241,9 @@ export async function runGiftTeam(brief, {
       }
     }
 
+    if (refining) {
+      for (const { candidateId } of rechecks) pending.add(candidateId);
+    }
     const candidates = [...pending].map((id) => handoff[id]);
     if (candidates.length) {
       onEvent({ kind: "review-start", role: reviewer.name, roleId: reviewer.id, turn, candidates });

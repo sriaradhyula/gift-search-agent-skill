@@ -310,6 +310,8 @@ body:has(.chat-dock:not([hidden])) .dashboard { padding-bottom: 76px; }
 .chat-markdown :is(ul, ol) { padding-inline-start: 23px; margin-bottom: 0; }
 .chat-markdown blockquote { margin-inline: 0; padding-left: 9px; border-left: 2px solid #6d9c83; }
 .chat-link { padding: 0; border: 0; background: none; color: #b4efc6; font: inherit; text-decoration: underline; text-align: start; }
+.refine-search { margin: 8px 2px 0; font-size: .8rem; }
+.refine-search:disabled { opacity: .55; }
 .chat-markdown code { font: .92em ui-monospace, monospace; background: #244336; border-radius: 3px; padding: 1px 3px; }
 .chat-markdown pre { max-width: 100%; overflow: auto; padding: 9px; border-radius: 5px; background: #203a2f; }
 .chat-markdown pre code { background: none; padding: 0; }
@@ -393,10 +395,18 @@ dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
 #link-inspection-url { display: block; margin-top: 5px; padding: 9px; border-radius: 6px; background: var(--wash); overflow-wrap: anywhere; }
 .close-button { position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; border: 0; border-radius: 50%; background: var(--wash); color: var(--ink); font-size: 1.3rem; }
 #share-dialog { width: min(540px, calc(100% - 32px)); }
+#refine-dialog { width: min(520px, calc(100% - 32px)); }
+.refine-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+.refine-fields .field, .refine-fields .price-comparison { margin: 0; }
+.refine-wide { grid-column: 1 / -1; }
+#refine-focus {
+  max-width: 100%; padding: 9px 10px; resize: vertical;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--input); color: var(--ink); font: inherit;
+}
 .share-format { margin-top: 16px; }
 #share-preview { width: 100%; padding: 11px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); background: var(--warm-panel); resize: vertical; font: inherit; font-size: .85rem; line-height: 1.5; }
-.share-actions, .wipe-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-#wipe-status:empty { display: none; }
+.share-actions, .wipe-actions, .refine-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+#wipe-status:empty, #refine-status:empty { display: none; }
 #share-dialog .share-status { margin-top: 8px; color: var(--muted); font-size: .82rem; }
 #share-dialog .share-status:empty { margin-top: 0; }
 

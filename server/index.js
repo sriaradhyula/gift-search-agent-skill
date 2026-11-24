@@ -115,19 +115,29 @@ async function handleSearch(request, response) {
       if (!response.destroyed) sendJson(response, 400, { error: "Enter a valid brief with a recipient, region, and budget." });
       return;
     }
-    const { researchTurns = 1, runId } = body;
+    const { researchTurns = 1, runId, refinement } = body;
+    const refining = refinement !== undefined;
     let brief;
     let prior;
     if (useHarnesses && runId !== undefined) {
       prior = await loadRun(runId);
       if (!prior) return sendJson(response, 404, { error: "The saved run was not found." });
-      brief = prior.brief;
-    } else {
-      try {
-        brief = parseBrief(body);
-      } catch {
-        return sendJson(response, 400, { error: "Enter a valid brief with a recipient, region, and budget." });
+    }
+    let focus = prior?.refinementFocus;
+    if (refining) {
+      if (!useHarnesses || researchTurns !== 1 || typeof refinement?.focus !== "string"
+          || !refinement.focus.trim() || refinement.focus.length > 600) {
+        return sendJson(response, 400, { error: "Enter a research focus for one follow-up turn." });
       }
+      if (prior && refinement.expectedUpdatedAt !== prior.updatedAt) {
+        return sendJson(response, 409, { error: "This run changed. Open Refine search again to review the latest brief." });
+      }
+      focus = refinement.focus.trim();
+    }
+    try {
+      brief = refining ? parseBrief(refinement.brief) : (prior?.brief ?? parseBrief(body));
+    } catch {
+      return sendJson(response, 400, { error: "Enter a valid brief with a recipient, region, and budget." });
     }
     const harness = prior?.harness ?? body.harness ?? "claude";
     if (useHarnesses) {
@@ -162,11 +172,14 @@ async function handleSearch(request, response) {
     };
     const report = record
       ? await searchWithHarness(brief, {
-        harness, serpApiKey, signal, researchTurns, onEvent, resume: record.checkpoint,
-        checkedOn: record.report.gifts.length ? record.report.checkedOn : undefined,
+        harness, serpApiKey, signal, researchTurns, onEvent, resume: record.checkpoint, focus,
+        recheckGifts: refining ? record.report.gifts : undefined,
+        checkedOn: !refining && record.report.gifts.length ? record.report.checkedOn : undefined,
         async onCheckpoint(checkpoint, report) {
           record.checkpoint = checkpoint;
           record.completedTurns = checkpoint.completedTurns;
+          record.brief = brief;
+          if (focus) record.refinementFocus = focus;
           record.report = report;
           record.events.push(...pendingEvents);
           record.committedEvents = record.events.length;
@@ -236,7 +249,7 @@ async function handleChat(request, response) {
   const send = startStream(response);
   try {
     const messages = body.messages.map(({ role, content }) => ({ role, content }));
-    await chatWithHarness({ messages, context: body.context }, {
+    await chatWithHarness({ messages, context: body.context, suggestRefinement: body.suggestRefinement === true }, {
       harness,
       signal: controller.signal,
       onEvent(event) {
@@ -261,6 +274,7 @@ async function handleHistory(request, response, id) {
     if (!record) return sendJson(response, 404, { error: "The saved run was not found." });
     return sendJson(response, 200, {
       ...runSummary(record, activeRunId), report: record.report, events: record.events, committedEvents: record.committedEvents,
+      ...(record.refinementFocus && { refinementFocus: record.refinementFocus }),
     });
   } catch {
     return sendJson(response, 500, { error: "Could not read saved search history." });
@@ -311,7 +325,7 @@ const server = createServer(async (request, response) => {
   if (path === "/api/config" && request.method === "GET") {
     return sendJson(response, 200, {
       live: liveEnabled, shopping: liveEnabled && Boolean(serpApiKey), claude: useHarnesses, maxResearchTurns: MAX_RESEARCH_TURNS,
-      ...(useHarnesses && { harnesses: availableHarnesses(), defaultHarness: "claude", history: true }),
+      ...(useHarnesses && { harnesses: availableHarnesses(), defaultHarness: "claude", history: true, refinements: true }),
       ...(sessionWipe && { sessionWipe: true }),
     });
   }
