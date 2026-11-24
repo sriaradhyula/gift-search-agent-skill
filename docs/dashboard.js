@@ -278,7 +278,8 @@ function showBriefForm() {
 
 select("new-search").addEventListener("click", () => {
   showBriefForm();
-  render();
+  message();
+  showSampleBrief(readBrief());
   select("recipient").focus();
 });
 

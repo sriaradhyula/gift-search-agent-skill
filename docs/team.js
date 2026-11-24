@@ -1,5 +1,6 @@
 import { productUrl } from "./report.js";
 
+const teamPanel = document.getElementById("team-panel");
 const teamMode = document.getElementById("team-mode");
 const teamDetails = document.getElementById("team-details");
 const teamToggle = document.getElementById("team-toggle");
@@ -158,6 +159,7 @@ function setTeamDetails(expanded) {
 teamToggle.addEventListener("click", () => setTeamDetails(teamDetails.hidden));
 
 export function resetTeam(mode, { expand = false, demo = false, consoleLabel = "Claude console" } = {}) {
+  teamPanel.hidden = !expand;
   teamMode.textContent = mode;
   turnLabel.hidden = true;
   teamHistory.length = 0;

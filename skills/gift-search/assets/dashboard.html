@@ -173,7 +173,7 @@ h2 { letter-spacing: -0.035em; }
 .primary svg, .secondary svg { width: 17px; height: 17px; }
 .primary:disabled, .secondary:disabled { opacity: .6; }
 
-.workspace { display: grid; grid-template-columns: 302px minmax(0, 1fr); align-items: start; gap: 26px; }
+.workspace { display: grid; grid-template-columns: 340px minmax(0, 1fr); align-items: start; gap: 26px; }
 .brief-panel { padding: 22px; border: 1px solid var(--warm-line); border-top: 3px solid #dca958; border-radius: var(--radius); background: var(--warm-paper); }
 .brief-heading { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; margin-bottom: 16px; }
 .brief-heading h2 { font-size: 1.19rem; }
@@ -220,6 +220,13 @@ fieldset { min-inline-size: 0; margin: 0; padding: 0; border: 0; }
 
 .results { display: grid; grid-template-columns: minmax(0, 1fr); gap: 15px; align-items: start; min-width: 0; }
 .results-main { min-width: 0; }
+.workflow-preview { padding: 19px; border: 1px solid var(--warm-line); border-radius: var(--radius); background: var(--warm-paper); }
+.results:has(> .team-panel:not([hidden]), #results-display:not([hidden])) > .workflow-preview { display: none; }
+.workflow-preview h2 { font-size: 1.12rem; color: var(--green); }
+.workflow-steps { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin: 13px 0 0; padding: 0; list-style: none; }
+.workflow-steps li { min-width: 0; padding: 10px 12px; border-radius: 8px; background: var(--wash); }
+.workflow-steps h3 { color: var(--green); font-size: .88rem; }
+.workflow-steps p { margin-top: 3px; color: var(--muted); font-size: .78rem; line-height: 1.4; }
 .team-panel {
   color: #fff9ed; background: radial-gradient(ellipse at top right, #234e3b, transparent 70%), #102e24;
   border: 1px solid #264c38; border-top: 3px solid #dca958; border-radius: var(--radius);
@@ -470,7 +477,7 @@ dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
 
 @media (max-width: 1080px) {
   .shell { width: calc(100% - 56px); }
-  .workspace { grid-template-columns: 266px minmax(0, 1fr); gap: 18px; }
+  .workspace { grid-template-columns: 286px minmax(0, 1fr); gap: 18px; }
   .brief-panel { padding: 17px; }
   .card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
@@ -546,7 +553,7 @@ dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
   <main class="shell dashboard" id="main">
     <section class="intro" aria-labelledby="page-title">
       <div>
-        <h1 id="page-title">Watch agents find <em>the gift.</em></h1>
+        <h1 id="page-title">Find <em>the gift.</em></h1>
       </div>
     </section>
     <div id="demo-controls" class="demo-controls" hidden>
@@ -658,7 +665,16 @@ dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
         </details>
       </aside>
       <section class="results" aria-label="Research and results">
-        <section class="team-panel" aria-labelledby="team-title">
+        <section class="workflow-preview" aria-labelledby="workflow-preview-title">
+          <h2 id="workflow-preview-title">How the agents work</h2>
+          <ol class="workflow-steps">
+            <li><h3>Plan</h3><p>Assign scouts</p></li>
+            <li><h3>Scout</h3><p>Find promising gifts</p></li>
+            <li><h3>Review</h3><p>Check retailer details</p></li>
+            <li><h3>Shortlist</h3><p>Show the best matches</p></li>
+          </ol>
+        </section>
+        <section id="team-panel" class="team-panel" aria-labelledby="team-title" hidden>
           <div class="team-header">
             <div><h2 id="team-title">Multi-agent Collaboration</h2><p id="team-mode" aria-live="polite"></p></div>
             <div class="team-actions">
@@ -1115,6 +1131,7 @@ function createDemoRun(scenario) {
 }
 
 
+const teamPanel = document.getElementById("team-panel");
 const teamMode = document.getElementById("team-mode");
 const teamDetails = document.getElementById("team-details");
 const teamToggle = document.getElementById("team-toggle");
@@ -1273,6 +1290,7 @@ function setTeamDetails(expanded) {
 teamToggle.addEventListener("click", () => setTeamDetails(teamDetails.hidden));
 
 function resetTeam(mode, { expand = false, demo = false, consoleLabel = "Claude console" } = {}) {
+  teamPanel.hidden = !expand;
   teamMode.textContent = mode;
   turnLabel.hidden = true;
   teamHistory.length = 0;
@@ -2023,7 +2041,8 @@ function showBriefForm() {
 
 select("new-search").addEventListener("click", () => {
   showBriefForm();
-  render();
+  message();
+  showSampleBrief(readBrief());
   select("recipient").focus();
 });
 
