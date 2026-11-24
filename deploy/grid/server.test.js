@@ -76,7 +76,9 @@ test("Grid serves the deep-linked demo to authorized readers", { timeout: 10_000
   for (const path of ["index.html", "dashboard.html"]) {
     const dashboard = await request(`/apps/gift-search/${path}?demo=chocolate`, credential);
     assert.equal(dashboard.status, 200);
-    assert.match(await dashboard.text(), /How the agents work/);
+    const html = await dashboard.text();
+    assert.match(html, /How the agents work/);
+    assert.match(html, /<a href="https:\/\/sriaradhyula\.github\.io\/gift-search-agent-skill\/">Skill guide<\/a>/);
   }
   const architecture = await request("/apps/gift-search/architecture.html", credential);
   assert.equal(architecture.status, 200);
