@@ -1,6 +1,6 @@
 import { examples, runSample, sampleImage } from "./sample.js";
 import { createDemoRun, demoScenarios } from "./demos.js";
-import { formatMoney, productUrl, shoppingThumbnail, usdPriceBand, usdPriceBandLabels, usdPriceComparisonCap, validBrief, validateReport } from "./report.js";
+import { formatMoney, giftThumbnailKey, productUrl, shoppingThumbnail, usdPriceBand, usdPriceBandLabels, usdPriceComparisonCap, validBrief, validateReport } from "./report.js";
 import { consumeEvents, finishTeam, recentResearchNotes, replayTimeline, researchMemory, resetTeam, showTeamEvent, stopTeam } from "./team.js";
 import { enableChat } from "./chat.js";
 import { enableShareResults } from "./share.js";
@@ -44,6 +44,7 @@ let report = runSample(readBrief());
 let running = false;
 let harnessMode = false;
 let historyEnabled = false;
+let retailerThumbnails = false;
 let wipeEnabled = false;
 let loadingRun = false;
 let loadedRun;
@@ -98,17 +99,19 @@ function openGift(gift) {
   dialog.showModal();
 }
 
-function appendThumbnail(card, imageUrl) {
-  const thumbnail = shoppingThumbnail(imageUrl);
-  if (thumbnail) {
-    const photo = element("img", "card-thumbnail");
-    photo.alt = "";
-    photo.loading = "lazy";
-    photo.referrerPolicy = "no-referrer";
-    photo.addEventListener("error", () => photo.remove(), { once: true });
-    photo.src = thumbnail.href;
-    card.append(photo);
-  }
+function appendThumbnail(card, imageUrl, fallback) {
+  const source = shoppingThumbnail(imageUrl)?.href ?? fallback;
+  if (!source) return;
+  const photo = element("img", "card-thumbnail");
+  photo.alt = "";
+  photo.loading = "lazy";
+  photo.referrerPolicy = "no-referrer";
+  photo.addEventListener("error", () => {
+    if (fallback && photo.getAttribute("src") !== fallback) photo.src = fallback;
+    else photo.remove();
+  });
+  photo.src = source;
+  card.append(photo);
 }
 
 function buildCard(gift, heading = "h3") {
@@ -119,7 +122,12 @@ function buildCard(gift, heading = "h3") {
     photo.setAttribute("aria-hidden", "true");
     card.append(photo);
   }
-  if (report.mode === "live") appendThumbnail(card, gift.imageUrl);
+  if (report.mode === "live") {
+    const index = report.gifts.indexOf(gift);
+    const fallback = retailerThumbnails && displayedRunId && gift.url && index >= 0 && index < 5
+      ? liveApi(`runs/${encodeURIComponent(displayedRunId)}/gifts/${index}/thumbnail/${giftThumbnailKey(gift.url)}`) : undefined;
+    appendThumbnail(card, gift.imageUrl, fallback);
+  }
 
   const body = element("div", "card-body");
   const title = element(heading, "", gift.name);
@@ -844,6 +852,7 @@ async function checkLiveAvailability() {
         onRefine: config.refinements === true ? openRefinement : undefined,
       });
       historyEnabled = config.history === true;
+      retailerThumbnails = config.retailerThumbnails === true;
       if (gridMount && historyEnabled) select("search-history").open = true;
       void refreshHistory();
     }

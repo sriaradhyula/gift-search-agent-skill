@@ -35,7 +35,12 @@ function publicAddress(ip) {
     && !(a === 198 && (b === 18 || b === 19));
 }
 
-async function openPublicPage(url, signal) {
+const pageTypes = /^(text\/(html|plain)|application\/xhtml\+xml)$/i;
+const thumbnailTypes = /^image\/(jpeg|png|webp)$/i;
+const pageRequest = { accept: "text/html,application/xhtml+xml,text/plain", types: pageTypes, maxBytes: 2_000_000 };
+const thumbnailRequest = { accept: "image/webp,image/jpeg,image/png", types: thumbnailTypes, maxBytes: 512 * 1024 };
+
+async function openPublicResource(url, signal, { accept, types, maxBytes }) {
   const { address } = await lookup(url.hostname, { family: 4 });
   signal.throwIfAborted();
   if (!publicAddress(address)) throw new Error("The retailer address is unavailable.");
@@ -44,7 +49,7 @@ async function openPublicPage(url, signal) {
     const request = get(url, {
       signal, family: 4, autoSelectFamily: false,
       lookup: (_host, _options, callback) => callback(null, address, 4),
-      headers: { "User-Agent": "Gift Search/2.0", Accept: "text/html,application/xhtml+xml,text/plain" },
+      headers: { "User-Agent": "Gift Search/2.0", Accept: accept },
     }, (response) => {
       const { statusCode: status, headers } = response;
       if (status !== 200) {
@@ -52,9 +57,10 @@ async function openPublicPage(url, signal) {
         resolve({ status, location: headers.location });
         return;
       }
-      if (!/^(text\/(html|plain)|application\/xhtml\+xml)\b/i.test(headers["content-type"] ?? "")) {
+      const type = headers["content-type"]?.split(";")[0].trim().toLowerCase() ?? "";
+      if (!types.test(type)) {
         response.resume();
-        resolve({ status, text: "" });
+        resolve({ status });
         return;
       }
       const chunks = [];
@@ -62,10 +68,10 @@ async function openPublicPage(url, signal) {
       response.on("error", reject);
       response.on("data", (chunk) => {
         length += chunk.length;
-        if (length > 2_000_000) request.destroy(new Error("The retailer page is too large."));
+        if (length > maxBytes) request.destroy(new Error("The retailer response is too large."));
         else chunks.push(chunk);
       });
-      response.on("end", () => resolve({ status, text: Buffer.concat(chunks).toString("utf8") }));
+      response.on("end", () => resolve({ status, type, body: Buffer.concat(chunks) }));
     });
     request.on("error", reject);
   });
@@ -92,29 +98,64 @@ function pageExcerpt(html) {
   return { structured, text: [text.slice(0, 3800), ...details].filter(Boolean).join("\n") };
 }
 
-async function fetchRetailer(input, signal) {
+async function fetchPublicResource(input, signal, options) {
   let url = retailerUrl(input);
   if (!url) return { error: "Enter a public HTTPS retailer URL." };
   const requestedUrl = url.href;
-  const deadline = AbortSignal.any([signal, AbortSignal.timeout(12_000)]);
   try {
     for (let step = 0; step < 4; step++) {
-      const page = await openPublicPage(url, deadline);
+      const page = await openPublicResource(url, signal, options);
       if ([301, 302, 303, 307, 308].includes(page.status) && page.location) {
         url = retailerUrl(new URL(page.location, url).href);
         if (!url) break;
         continue;
       }
-      if (page.status !== 200 || !page.text) return { requestedUrl, status: page.status, error: "Retailer content unavailable." };
-      const excerpt = pageExcerpt(page.text);
-      const blocked = !excerpt.structured && /access denied|verify (that )?you are human|just a moment|captcha|request blocked/i.test(excerpt.text.slice(0, 450));
-      if (blocked || !excerpt.text) return { requestedUrl, error: "Retailer content unavailable." };
-      return { requestedUrl, url: url.href, ...excerpt };
+      if (page.status !== 200 || !page.body?.length) return { requestedUrl, status: page.status, error: "Retailer content unavailable." };
+      return { requestedUrl, url: url.href, ...page };
     }
-  } catch {
-    if (signal.aborted) signal.throwIfAborted();
-  }
+  } catch {}
   return { requestedUrl, error: "The retailer could not be opened." };
+}
+
+async function fetchRetailer(input, signal) {
+  const page = await fetchPublicResource(input, AbortSignal.any([signal, AbortSignal.timeout(12_000)]), pageRequest);
+  signal.throwIfAborted();
+  if (page.error) return page;
+  const excerpt = pageExcerpt(page.body.toString("utf8"));
+  const blocked = !excerpt.structured && /access denied|verify (that )?you are human|just a moment|captcha|request blocked/i.test(excerpt.text.slice(0, 450));
+  if (blocked || !excerpt.text) return { requestedUrl: page.requestedUrl, error: "Retailer content unavailable." };
+  return { requestedUrl: page.requestedUrl, url: page.url, ...excerpt };
+}
+
+export function retailerThumbnailUrl(html, pageUrl) {
+  const images = new Map();
+  for (const [, tag] of html.split(/<\/head\s*>/i, 1)[0].matchAll(/<meta\b((?:"[^"]*"|'[^']*'|[^"'<>])*)>/gi)) {
+    const attrs = Object.fromEntries([...tag.matchAll(/([\w:-]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g)]
+      .map(([, name, quoted, single]) => [name.toLowerCase(), quoted ?? single]));
+    const property = attrs.property?.toLowerCase();
+    if (!["og:image:secure_url", "og:image"].includes(property) || !attrs.content || images.has(property)) continue;
+    const value = stripMarkup(attrs.content);
+    const absolute = URL.canParse(value, pageUrl) ? new URL(value, pageUrl) : null;
+    const image = absolute && retailerUrl(absolute.href);
+    if (image) images.set(property, image);
+  }
+  return images.get("og:image:secure_url") ?? images.get("og:image") ?? null;
+}
+
+function imageSignatureMatches(type, body) {
+  if (type === "image/jpeg") return body.subarray(0, 3).equals(Buffer.from([0xff, 0xd8, 0xff]));
+  if (type === "image/png") return body.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+  return type === "image/webp" && body.toString("ascii", 0, 4) === "RIFF" && body.toString("ascii", 8, 12) === "WEBP";
+}
+
+export async function fetchRetailerThumbnail(product, signal) {
+  const deadline = AbortSignal.any([signal, AbortSignal.timeout(6_000)]);
+  const page = await fetchPublicResource(product, deadline, pageRequest);
+  if (!page.body) return null;
+  const image = retailerThumbnailUrl(page.body.toString("utf8"), page.url);
+  if (!image) return null;
+  const { type, body } = await fetchPublicResource(image.href, deadline, thumbnailRequest);
+  return body && imageSignatureMatches(type, body) ? { type, body } : null;
 }
 
 async function searchWeb(query, brief, key, signal) {

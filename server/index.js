@@ -1,12 +1,13 @@
 import { createServer } from "node:http";
 import { spawn } from "node:child_process";
-import { validBrief } from "../skills/gift-search/scripts/report.mjs";
+import { giftThumbnailKey, validBrief } from "../skills/gift-search/scripts/report.mjs";
 import { readSerpApiKey } from "../skills/gift-search/scripts/shopping.mjs";
 import { chatWithHarness, managedSessionFiles, searchWithHarness, wipeWorkspaces } from "./claude-acp.js";
 import { readDashboardAsset } from "./dashboard-assets.js";
 import { MAX_RESEARCH_TURNS } from "./gift-team.js";
 import { gridStorageKey } from "./grid-session.js";
 import { availableHarnesses, harnessCommand, harnesses } from "./harnesses.js";
+import { fetchRetailerThumbnail } from "./retailer-evidence.js";
 import { listRuns, loadRun, newRun, prepareGridHistory, runSummary, saveRun, wipeRuns } from "./run-history.js";
 import { liveReport, searchGifts } from "./search.js";
 
@@ -270,6 +271,20 @@ async function handleHistory(request, response, id) {
   if (!localOrigin(request)) return sendJson(response, 403, { error: "Open the local dashboard to read history." });
   try {
     if (!id) return sendJson(response, 200, await listRuns(activeRunId));
+    const thumbnail = /^([^/]+)\/gifts\/([0-4])\/thumbnail\/([0-9a-f]{8})$/.exec(id);
+    if (thumbnail) {
+      const [, runId, position, key] = thumbnail;
+      const record = await loadRun(runId);
+      const gift = record?.report.mode === "live" ? record.report.gifts[Number(position)] : null;
+      if (typeof gift?.url !== "string" || giftThumbnailKey(gift.url) !== key) return sendJson(response, 404, { error: "No product photo." });
+      const controller = new AbortController();
+      response.once("close", () => controller.abort());
+      const photo = await fetchRetailerThumbnail(gift.url, controller.signal);
+      if (response.destroyed) return;
+      if (!photo) return sendJson(response, 404, { error: "No product photo." });
+      response.writeHead(200, { "Content-Type": photo.type, "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" });
+      return response.end(photo.body);
+    }
     const record = await loadRun(id);
     if (!record) return sendJson(response, 404, { error: "The saved run was not found." });
     return sendJson(response, 200, {
@@ -325,7 +340,7 @@ const server = createServer(async (request, response) => {
   if (path === "/api/config" && request.method === "GET") {
     return sendJson(response, 200, {
       live: liveEnabled, shopping: liveEnabled && Boolean(serpApiKey), claude: useHarnesses, maxResearchTurns: MAX_RESEARCH_TURNS,
-      ...(useHarnesses && { harnesses: availableHarnesses(), defaultHarness: "claude", history: true, refinements: true }),
+      ...(useHarnesses && { harnesses: availableHarnesses(), defaultHarness: "claude", history: true, refinements: true, retailerThumbnails: true }),
       ...(sessionWipe && { sessionWipe: true }),
     });
   }

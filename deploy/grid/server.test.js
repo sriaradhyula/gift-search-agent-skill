@@ -10,6 +10,7 @@ import { join } from "node:path";
 import { test } from "node:test";
 import { SignJWT } from "jose";
 import { runGiftTeam } from "../../server/gift-team.js";
+import { retailerThumbnailUrl } from "../../server/retailer-evidence.js";
 
 async function availablePort() {
   const reservation = createServer().listen(0, "127.0.0.1");
@@ -20,6 +21,17 @@ async function availablePort() {
 }
 
 const accountKey = (subject) => createHash("sha256").update(subject).digest("hex");
+
+test("Retailer photos use the listing's HTTPS preview metadata", () => {
+  const html = `<head>
+    <meta content="https://private.internal/example.jpg" property="og:image:secure_url">
+    <meta content='/media/puzzle.webp?width=400&amp;v=2' property='og:image'>
+  </head><body><meta property="og:image:secure_url" content="https://elsewhere.example/logo.png"></body>`;
+  assert.equal(retailerThumbnailUrl(html, "https://shop.example.com/products/puzzle")?.href,
+    "https://shop.example.com/media/puzzle.webp?width=400&v=2");
+  assert.equal(retailerThumbnailUrl('<meta property="og:image" content="http://shop.example.com/puzzle.png">',
+    "https://shop.example.com/products/puzzle"), null);
+});
 
 test("Refinement keeps the previous board and rechecks earlier picks against the edited brief", async () => {
   const brief = { budget: 35, currency: "USD" };
@@ -147,6 +159,7 @@ test("Grid streams a live run through the relay only for the paired account", { 
   t.after(() => rm(workspace, { recursive: true }));
   const tokenFile = join(workspace, "relay-token");
   await writeFile(tokenFile, workerToken, { mode: 0o600 });
+  const thumbnailPath = "/api/runs/00000000-0000-4000-8000-000000000001/gifts/0/thumbnail/26ab56cd";
   let received = 0;
   const worker = createHttpServer(async (request, response) => {
     assert.equal(request.headers.authorization, undefined);
@@ -154,6 +167,10 @@ test("Grid streams a live run through the relay only for the paired account", { 
     if (request.url === "/api/config") {
       response.writeHead(200, { "Content-Type": "application/json" });
       return response.end('{"live":true}');
+    }
+    if (request.url === thumbnailPath) {
+      response.writeHead(200, { "Content-Type": "image/webp" });
+      return response.end("fixture-image");
     }
     if (request.url === "/api/session/wipe") {
       received++;
@@ -204,6 +221,12 @@ test("Grid streams a live run through the relay only for the paired account", { 
 
   assert.deepEqual(await (await request("/api/config", other)).json(), { live: false });
   assert.equal((await request("/api/runs", other)).status, 403);
+  assert.equal((await request(thumbnailPath, other)).status, 403);
+  const thumbnail = await request(`/apps/gift-search${thumbnailPath}`, ownerRead);
+  assert.equal(thumbnail.status, 200);
+  assert.equal(thumbnail.headers.get("content-type"), "image/webp");
+  assert.equal(thumbnail.headers.get("cache-control"), "no-store, no-transform");
+  assert.equal(await thumbnail.text(), "fixture-image");
   assert.deepEqual(await (await request("/apps/gift-search/api/config", ownerRead)).json(), { live: true });
   assert.equal((await request("/api/search", otherRun, "POST", post)).status, 403);
   assert.equal((await request("/api/search", ownerRead, "POST", post)).status, 403);

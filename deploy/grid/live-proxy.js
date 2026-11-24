@@ -1,6 +1,6 @@
 import { request as upstreamRequest } from "node:http";
 
-const runPath = /^\/api\/runs\/[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/;
+const runPath = /^\/api\/runs\/[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}(?:\/gifts\/[0-4]\/thumbnail\/[0-9a-f]{8})?$/;
 
 export function isLiveRoute(method, path) {
   if (method === "POST") return path === "/api/search" || path === "/api/chat" || path === "/api/session/wipe";

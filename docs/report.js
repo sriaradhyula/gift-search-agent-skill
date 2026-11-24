@@ -28,6 +28,13 @@ export function shoppingThumbnail(value) {
   return url && /^encrypted-tbn\d*\.gstatic\.com$/.test(url.hostname) && !url.port ? url : null;
 }
 
+export function giftThumbnailKey(url) {
+  // Keep an older tab from showing a different gift’s photo after the run changes.
+  let hash = 2166136261;
+  for (let index = 0; index < url.length; index++) hash = Math.imul(hash ^ url.charCodeAt(index), 16777619);
+  return (hash >>> 0).toString(16).padStart(8, "0");
+}
+
 export function validBrief(brief) {
   return isRecord(brief) && briefTextFields.every((field) => isText(brief[field]))
     && isAmount(brief.budget) && isText(brief.currency) && /^[A-Z]{3}$/.test(brief.currency)
