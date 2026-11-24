@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { once } from "node:events";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
 import { createServer as createHttpServer } from "node:http";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
@@ -17,6 +17,8 @@ async function availablePort() {
   await new Promise((done) => reservation.close(done));
   return port;
 }
+
+const accountKey = (subject) => createHash("sha256").update(subject).digest("hex");
 
 async function gridRuntime(t, env = {}) {
   const port = await availablePort();
@@ -101,9 +103,15 @@ test("Grid streams a live run through the relay only for the paired account", { 
   let received = 0;
   const worker = createHttpServer(async (request, response) => {
     assert.equal(request.headers.authorization, undefined);
+    assert.equal(request.headers["x-gift-grid-account"], accountKey("fixture-user"));
     if (request.url === "/api/config") {
       response.writeHead(200, { "Content-Type": "application/json" });
       return response.end('{"live":true}');
+    }
+    if (request.url === "/api/session/wipe") {
+      received++;
+      response.writeHead(200, { "Content-Type": "application/json" });
+      return response.end('{"wiped":true}');
     }
     received++;
     const chunks = [];
@@ -160,4 +168,113 @@ test("Grid streams a live run through the relay only for the paired account", { 
   assert.equal(result.headers.get("content-type"), "application/x-ndjson");
   assert.equal(await result.text(), '{"kind":"run-started"}\n{"kind":"report"}\n');
   assert.equal(received, 1);
+
+  const wipePath = "/apps/gift-search/api/session/wipe";
+  const wipe = { headers: { origin, "content-type": "application/json" }, body: "{}" };
+  assert.equal((await request(wipePath, otherRun, "POST", wipe)).status, 403);
+  assert.equal((await request(wipePath, ownerRead, "POST", wipe)).status, 403);
+  assert.equal((await request(wipePath, ownerRun, "POST", { ...wipe, headers: {} })).status, 403);
+  assert.equal((await fetch(`${relayOrigin}/api/session/wipe`, { method: "POST" })).status, 401);
+  assert.equal(received, 1);
+  const wiped = await request(wipePath, ownerRun, "POST", { ...wipe, headers: { ...wipe.headers, "x-gift-grid-account": "forged" } });
+  assert.equal(wiped.status, 200);
+  assert.deepEqual(await wiped.json(), { wiped: true });
+  assert.equal(received, 2);
+});
+
+test("Managed worker clears only its saved runs and scratch files while idle", { timeout: 10_000 }, async (t) => {
+  const workspace = await mkdtemp(join(tmpdir(), "gift-wipe-test-"));
+  const sessions = join(workspace, "sessions");
+  const history = join(workspace, "history");
+  const subject = "fixture-user";
+  const accountSessions = join(sessions, accountKey(subject));
+  const accountHistory = join(history, "grid", accountKey(subject));
+  const release = join(workspace, "finish-chat");
+  const harness = join(workspace, "fake-claude.cjs");
+  const runId = "00000000-0000-4000-8000-000000000001";
+  await mkdir(history);
+  await mkdir(join(accountSessions, "gift-search-acp-Legacy"), { recursive: true });
+  await writeFile(join(history, `${runId}.json`), JSON.stringify({
+    version: 1, id: runId, brief: { recipient: "Test" }, report: { gifts: [] },
+    events: [], committedEvents: 0, updatedAt: "2026-11-23",
+  }));
+  await writeFile(join(history, `.${runId}.${runId}.tmp`), "partial checkpoint");
+  await writeFile(join(history, "unrelated.txt"), "keep");
+  await writeFile(join(accountSessions, "unrelated.txt"), "keep");
+  await writeFile(harness, `#!/usr/bin/env node
+const { existsSync, writeFileSync } = require("node:fs");
+const { join } = require("node:path");
+const { createInterface } = require("node:readline");
+const send = (message) => console.log(JSON.stringify(message));
+createInterface({ input: process.stdin }).on("line", (line) => {
+  const { id, method } = JSON.parse(line);
+  if (method === "initialize") send({ id, result: { protocolVersion: 1 } });
+  if (method === "session/new") {
+    writeFileSync(join(process.env.HOME, "synthetic-transcript"), "chat");
+    send({ id, result: { sessionId: "fixture" } });
+  }
+  if (method === "session/prompt") {
+    const wait = setInterval(() => {
+      if (!existsSync(process.env.FIXTURE_RELEASE)) return;
+      clearInterval(wait);
+      send({ id, result: { stopReason: "end_turn" } });
+    }, 20);
+  }
+});
+`, { mode: 0o700 });
+  const workers = [];
+  t.after(async () => {
+    await writeFile(release, "").catch(() => {});
+    for (const { worker, exit } of workers) {
+      worker.kill();
+      await exit;
+    }
+    await rm(workspace, { recursive: true, force: true });
+  });
+  async function startWorker(subject) {
+    const port = await availablePort();
+    const worker = spawn(process.execPath, ["server/index.js", "--claude-acp"], {
+      env: { ...process.env, HOME: workspace, PORT: String(port), GIFT_SESSION_DIR: sessions, GIFT_HISTORY_DIR: history,
+        GIFT_GRID_LIVE_SUBJECT: subject, CLAUDE_ACP_EXECUTABLE: harness, FIXTURE_RELEASE: release,
+        SERPAPI_API_KEY: "", SERPAPI_API_KEY_FILE: "",
+        GIFT_CLAUDE_LITELLM_BASE_URL: "", GIFT_CLAUDE_LITELLM_TOKEN: "", GIFT_CLAUDE_LITELLM_MODEL: "" },
+    });
+    const exit = once(worker, "exit");
+    workers.push({ worker, exit });
+    await Promise.race([once(worker.stdout, "data"), exit.then(([code]) => assert.fail(`Worker exited with status ${code}`))]);
+    return (path, options = {}) => fetch(`http://127.0.0.1:${port}/api/${path}`, {
+      ...options, headers: { "x-gift-grid-account": accountKey(subject), ...options.headers },
+    });
+  }
+
+  const post = (body) => ({ method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const request = await startWorker(subject);
+  assert.equal((await (await request("config")).json()).sessionWipe, true);
+  assert.equal((await request(`runs/${runId}`)).status, 200);
+  assert.equal((await request("runs", { headers: { "x-gift-grid-account": accountKey("other-user") } })).status, 403);
+  assert.deepEqual(await readdir(accountHistory), [`${runId}.json`]);
+  await writeFile(join(accountHistory, `.${runId}.${runId}.tmp`), "partial checkpoint");
+  const other = await startWorker("other-user");
+  assert.deepEqual(await (await other("runs")).json(), []);
+  assert.equal((await other(`runs/${runId}`)).status, 404);
+  assert.deepEqual(await (await other("session/wipe", post({}))).json(), { wiped: true });
+  assert.equal((await request(`runs/${runId}`)).status, 200);
+  const local = await startWorker("");
+  assert.equal((await (await local("config")).json()).sessionWipe, undefined);
+  assert.equal((await local("session/wipe", post({}))).status, 404);
+
+  const chat = await request("chat", post({ messages: [{ role: "user", content: "Test chat" }] }));
+  assert.equal(chat.status, 200);
+  assert.equal((await request("session/wipe", post({}))).status, 409);
+  await writeFile(release, "");
+  assert.match(await chat.text(), /"kind":"done"/);
+  assert.deepEqual((await readdir(accountSessions)).sort(), ["gift-search-acp-Legacy", "unrelated.txt"]);
+  assert.deepEqual(await (await request("session/wipe", post({}))).json(), { wiped: true });
+  assert.deepEqual(await (await request("runs")).json(), []);
+  assert.equal((await request(`runs/${runId}`)).status, 404);
+  assert.equal((await request("search", post({ runId }))).status, 404);
+  assert.deepEqual(await readdir(accountHistory), []);
+  assert.deepEqual((await readdir(history)).sort(), [".grid-history-owner", "grid", "unrelated.txt"]);
+  assert.deepEqual(await readdir(accountSessions), ["unrelated.txt"]);
+  assert.deepEqual(await (await request("session/wipe", post({}))).json(), { wiped: true });
 });

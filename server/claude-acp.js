@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, readdir, rm } from "node:fs/promises";
 import { isIP } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -7,11 +7,34 @@ import { createInterface } from "node:readline";
 import { productUrl } from "../skills/gift-search/scripts/report.mjs";
 import { discoverShopping } from "../skills/gift-search/scripts/shopping.mjs";
 import { runGiftTeam } from "./gift-team.js";
+import { gridStorageKey } from "./grid-session.js";
 import { listingKey, liveReport } from "./search.js";
 import { claudeUsesLiteLLM, harnessCommand, harnessEnvironment, harnesses } from "./harnesses.js";
 import { collectRetailerEvidence, usesAgentCoreSearch } from "./retailer-evidence.js";
 
 const skillPath = new URL("../skills/gift-search/SKILL.md", import.meta.url);
+const sessionDir = process.env.GIFT_SESSION_DIR?.trim();
+const workspaceRoot = gridStorageKey && sessionDir ? join(sessionDir, gridStorageKey) : null;
+export const managedSessionFiles = Boolean(workspaceRoot);
+
+async function createWorkspace(prefix) {
+  if (!workspaceRoot) return mkdtemp(join(tmpdir(), prefix));
+  await mkdir(workspaceRoot, { recursive: true, mode: 0o700 });
+  return mkdtemp(join(workspaceRoot, prefix));
+}
+
+export async function wipeWorkspaces() {
+  const entries = await readdir(workspaceRoot, { withFileTypes: true }).catch((error) => {
+    if (error.code === "ENOENT") return [];
+    throw error;
+  });
+  for (const entry of entries) {
+    if (entry.isDirectory() && /^gift-(?:search|chat)-acp-[a-z0-9]{6}$/i.test(entry.name)) {
+      await rm(join(workspaceRoot, entry.name), { recursive: true, force: true });
+    }
+  }
+}
+
 const budgetSetting = process.env.GIFT_CLAUDE_SESSION_BUDGET_USD?.trim();
 const maxBudgetUsd = budgetSetting ? Number(budgetSetting) : undefined;
 if (maxBudgetUsd !== undefined && (!Number.isFinite(maxBudgetUsd) || maxBudgetUsd <= 0)) {
@@ -46,10 +69,19 @@ async function harnessTurn(harness, prompt, cwd, signal, requestedTools, { activ
   if (!launch) throw new Error(`${label} is unavailable. Install its local CLI and try again.`);
   const [command, ...args] = launch;
   const env = harnessEnvironment(harness);
+  if (managedSessionFiles) {
+    const home = await mkdtemp(join(cwd, "turn-"));
+    Object.assign(env, {
+      HOME: home, XDG_CACHE_HOME: home, XDG_CONFIG_HOME: home, XDG_DATA_HOME: home, XDG_STATE_HOME: home,
+      TMPDIR: home, TMP: home, TEMP: home, CLAUDE_CONFIG_DIR: join(home, ".claude"),
+    });
+    signal.throwIfAborted();
+  }
   const tools = hasNativeWebTools(harness) ? requestedTools : [];
   const child = spawn(command, args, {
     cwd, env, signal, stdio: ["pipe", "pipe", "ignore"], windowsHide: true, detached: process.platform !== "win32",
   });
+  const childClosed = new Promise((done) => child.once("close", done));
   const lines = createInterface({ input: child.stdout, crlfDelay: Infinity });
   const sends = (message) => child.stdin.write(JSON.stringify({ jsonrpc: "2.0", ...message }) + "\n");
   const requests = new Map();
@@ -153,13 +185,24 @@ async function harnessTurn(harness, prompt, cwd, signal, requestedTools, { activ
   } finally {
     lines.close();
     child.stdin.end();
-    if (child.pid && process.platform !== "win32") {
+    const terminate = (killSignal) => {
+      if (!child.pid || process.platform === "win32") return child.kill(killSignal);
       try {
-        process.kill(-child.pid, "SIGTERM");
+        process.kill(-child.pid, killSignal);
       } catch (error) {
         if (error.code !== "ESRCH") throw error;
       }
-    } else child.kill();
+    };
+    terminate("SIGTERM");
+    if (managedSessionFiles) {
+      const forceExit = setTimeout(() => terminate("SIGKILL"), 2000);
+      try {
+        await childClosed;
+      } finally {
+        clearTimeout(forceExit);
+        terminate("SIGKILL");
+      }
+    }
   }
 }
 
@@ -240,7 +283,7 @@ export async function searchWithHarness(brief, {
 }) {
   const skill = await readFile(skillPath, "utf8");
   const shopping = serpApiKey ? discoverShopping(brief, serpApiKey, signal).catch(() => null) : Promise.resolve(null);
-  const cwd = await mkdtemp(join(tmpdir(), "gift-search-acp-"));
+  const cwd = await createWorkspace("gift-search-acp-");
   async function makeReport(team) {
     const discovery = await shopping;
     const discoveryNote = discovery?.note ?? (serpApiKey
@@ -327,7 +370,7 @@ export async function searchWithHarness(brief, {
 }
 
 export async function chatWithHarness({ messages, context }, { harness = "claude", signal, onEvent }) {
-  const cwd = await mkdtemp(join(tmpdir(), "gift-chat-acp-"));
+  const cwd = await createWorkspace("gift-chat-acp-");
   try {
     const deadline = AbortSignal.any([signal, AbortSignal.timeout(180_000)]);
     deadline.throwIfAborted();

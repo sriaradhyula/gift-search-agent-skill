@@ -39,5 +39,12 @@ Install the server dependencies with `npm ci`. Configure the worker with the fol
 | `GIFT_CLAUDE_SESSION_BUDGET_USD` | Estimated per-session cap, such as `1` |
 | `GIFT_AGENTCORE_WEB_SEARCH_REGION` | AWS Region of the AgentCore endpoint |
 | `GIFT_AGENTCORE_WEB_SEARCH_ENDPOINT` | HTTPS DNS name of the AgentCore interface VPC endpoint |
+| `GIFT_GRID_LIVE_SUBJECT` | The same paired account subject used by the Grid runtime |
+| `GIFT_HISTORY_DIR` | Writable history directory, such as `/var/lib/gift-search/runs` |
+| `GIFT_SESSION_DIR` | Writable scratch directory on a pod-local volume, such as `/tmp/gift-search-sessions` |
 
 Give the worker an AWS workload identity with `bedrock-agentcore:InvokeWebSearch` permission on `arn:aws:bedrock-agentcore:<region>:aws:tool/web-search.v1`. The private endpoint carries text searches from the server. Exact retailer pages still use the server's public HTTPS fetcher, and optional SerpApi Google Shopping results still count as leads. The LiteLLM virtual key budget covers model calls. AgentCore search has separate AWS billing.
+
+On Grid, **Search history** opens automatically and shows only the paired account’s saved runs. **Wipe session** removes that account’s saved runs, research memory, and leftover scratch files from the worker, and clears the active tab. Wait for any active search or chat reply to finish first. Claude subprocesses use a fresh scratch home, which is removed with the workspace when the request ends. Downloads, shared copies, backups, and records held by model or search providers have their own retention.
+
+Keep each worker dedicated to its paired account. On the first upgrade from unscoped storage, keep the existing pairing so the worker can migrate the previous saved runs to their owner. Later pairings get separate history.

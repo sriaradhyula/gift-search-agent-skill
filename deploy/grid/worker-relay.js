@@ -16,7 +16,7 @@ const server = createServer((request, response) => {
   }
   const path = request.url.split("?")[0];
   if (!isLiveRoute(request.method, path)) return replyJson(response, 404, { error: "Unknown worker route." });
-  forwardLiveRequest(request, response, target, { path });
+  forwardLiveRequest(request, response, target, { path, gridAccount: request.headers["x-gift-grid-account"] });
 });
 
 server.listen(relayPort, "0.0.0.0");

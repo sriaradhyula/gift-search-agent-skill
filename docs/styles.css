@@ -332,6 +332,7 @@ body:has(.chat-dock:not([hidden])) .dashboard { padding-bottom: 76px; }
 }
 .text-link { padding: 0; border: 0; color: var(--green); background: none; text-decoration: none; font-size: .79rem; font-weight: 700; }
 .text-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+.wipe-session { display: block; margin-top: 13px; color: var(--cranberry-dark); }
 .results-heading { display: flex; justify-content: space-between; align-items: end; gap: 10px; margin-block: 22px 15px; }
 .results-heading > :first-child { min-width: 0; overflow-wrap: anywhere; }
 .results-heading h2 { color: var(--cranberry-dark); font-size: 1.55rem; }
@@ -383,7 +384,8 @@ dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
 #share-dialog { width: min(540px, calc(100% - 32px)); }
 .share-format { margin-top: 16px; }
 #share-preview { width: 100%; padding: 11px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); background: var(--warm-panel); resize: vertical; font: inherit; font-size: .85rem; line-height: 1.5; }
-.share-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.share-actions, .wipe-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+#wipe-status:empty { display: none; }
 #share-dialog .share-status { margin-top: 8px; color: var(--muted); font-size: .82rem; }
 #share-dialog .share-status:empty { margin-top: 0; }
 

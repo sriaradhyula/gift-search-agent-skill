@@ -1,6 +1,7 @@
 import { createServer } from "node:http";
 import { jwtVerify } from "jose";
 import { readDashboardAsset } from "../../server/dashboard-assets.js";
+import { gridStorageKey, gridSubject as liveSubject } from "../../server/grid-session.js";
 import { forwardLiveRequest, isLiveRoute, replyJson } from "./live-proxy.js";
 import registration from "./registration.json" with { type: "json" };
 
@@ -13,7 +14,6 @@ if (key.length < 32) throw new Error("AGENTIC_APP_TOKEN_SECRET must contain at l
 
 const port = Number(process.env.PORT || 8080);
 if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error("Invalid PORT.");
-const liveSubject = process.env.GIFT_GRID_LIVE_SUBJECT?.trim();
 const workerToken = process.env.GIFT_GRID_LIVE_TOKEN?.trim();
 const workerOrigin = process.env.GIFT_GRID_LIVE_WORKER && new URL(process.env.GIFT_GRID_LIVE_WORKER);
 const browserOrigin = process.env.GIFT_GRID_BROWSER_ORIGIN;
@@ -63,7 +63,7 @@ const server = createServer(async (request, response) => {
     if (request.method === "POST" && (request.headers.origin !== browserOrigin || request.headers["sec-fetch-site"] === "cross-site")) {
       return replyJson(response, 403, { error: "Open Gift Search in Grid to start a live run." });
     }
-    return forwardLiveRequest(request, response, workerOrigin, { token: workerToken, path });
+    return forwardLiveRequest(request, response, workerOrigin, { token: workerToken, path, gridAccount: gridStorageKey });
   }
 
   try {

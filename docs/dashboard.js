@@ -22,6 +22,7 @@ const region = select("region");
 const dialog = select("gift-detail");
 const demoChoice = select("demo-scenario");
 const gridMount = document.querySelector('meta[name="gift-search-mount"]')?.content;
+const wipedSessionKey = "gift-search-session-wiped";
 const liveApi = (path) => `${gridMount ?? "."}/api/${path}`;
 const reportFragment = "#report=";
 const teamIntroduction = "";
@@ -38,6 +39,7 @@ let report = runSample(readBrief());
 let running = false;
 let harnessMode = false;
 let historyEnabled = false;
+let wipeEnabled = false;
 let loadingRun = false;
 let loadedRun;
 const harnessOptions = new Map();
@@ -204,6 +206,7 @@ function updateMode() {
   select("research-turns").disabled = !showResearchTurns;
   select("search-availability").hidden = liveSearch || demoMode.checked;
   select("search-history").hidden = !historyEnabled || !liveSearch;
+  select("wipe-session").hidden = !wipeEnabled;
   updateChatVisibility();
   updateTeamActions();
   updateSearchButton();
@@ -214,6 +217,42 @@ function updateRecipient() {
   select("custom-recipient-field").hidden = !custom;
   customRecipient.disabled = !custom;
 }
+
+const wipeDialog = select("wipe-dialog");
+const confirmWipe = select("confirm-wipe");
+select("wipe-session").addEventListener("click", () => {
+  select("wipe-status").textContent = "";
+  wipeDialog.showModal();
+});
+select("cancel-wipe").addEventListener("click", () => wipeDialog.close());
+wipeDialog.addEventListener("cancel", (event) => {
+  if (confirmWipe.disabled) event.preventDefault();
+});
+select("wipe-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (confirmWipe.disabled || !wipeEnabled) return;
+  const cancel = select("cancel-wipe");
+  const status = select("wipe-status");
+  confirmWipe.disabled = cancel.disabled = true;
+  status.textContent = "Wiping session…";
+  try {
+    const response = await fetch(liveApi("session/wipe"), {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: "{}",
+    });
+    const result = response.headers.get("Content-Type")?.includes("application/json") ? await response.json() : null;
+    if (!response.ok || result?.wiped !== true) throw new Error(result?.error || "Session wipe failed. Try again.");
+    try {
+      sessionStorage.setItem(wipedSessionKey, "1");
+    } catch {
+      // Keep clearing the tab even when browser storage is unavailable.
+    }
+    history.replaceState(null, "", location.pathname);
+    location.reload();
+  } catch (error) {
+    status.textContent = error.message || "Session wipe failed. Try again.";
+    confirmWipe.disabled = cancel.disabled = false;
+  }
+});
 
 function readBrief() {
   const destination = searchesLive() ? region.selectedOptions[0] : region.options[0];
@@ -623,6 +662,7 @@ async function checkLiveAvailability() {
     if (!response.ok || !response.headers.get("Content-Type")?.includes("application/json")) return;
     const config = await response.json();
     liveReady = config.live === true;
+    wipeEnabled = Boolean(gridMount) && liveReady && config.sessionWipe === true;
     if (config.claude === true) {
       harnessMode = true;
       const available = config.harnesses ?? [{ id: "claude", label: "Claude Code", available: true }];
@@ -642,6 +682,7 @@ async function checkLiveAvailability() {
         endpoint: liveApi("chat"), getContext: chatContext, getHarness: selectedHarness, onActivity: showTeamEvent,
       });
       historyEnabled = config.history === true;
+      if (gridMount && historyEnabled) select("search-history").open = true;
       void refreshHistory();
     }
   } catch {
@@ -653,6 +694,18 @@ updateRecipient();
 updateInterestSuggestions();
 render();
 openInitialReport();
+if (gridMount) {
+  form.autocomplete = "off";
+  select("claude-chat").autocomplete = "off";
+  try {
+    if (sessionStorage.getItem(wipedSessionKey)) {
+      sessionStorage.removeItem(wipedSessionKey);
+      briefStatus.textContent = "Session wiped.";
+    }
+  } catch {
+    // Browser storage is optional.
+  }
+}
 const linkedDemo = demoScenarios.find(({ id }) => id === new URLSearchParams(location.search).get("demo"));
 if (linkedDemo && !form.hidden) {
   demoMode.checked = true;

@@ -99,7 +99,7 @@ function isolateOpenCodeTools(env) {
 
 export function harnessEnvironment(id) {
   const env = { ...process.env };
-  for (const key of ["SERPAPI_API_KEY", "SERPAPI_API_KEY_FILE", "GIFT_HISTORY_DIR", ...liteLlmVariables]) delete env[key];
+  for (const key of ["SERPAPI_API_KEY", "SERPAPI_API_KEY_FILE", "GIFT_HISTORY_DIR", "GIFT_SESSION_DIR", "GIFT_GRID_LIVE_SUBJECT", ...liteLlmVariables]) delete env[key];
   if (id === "claude") {
     for (const key of [
       "ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_BASE_URL", "ANTHROPIC_MODEL",

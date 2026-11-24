@@ -152,6 +152,7 @@
           <button id="load-run" class="secondary" type="button" disabled>Load run</button>
           <p id="history-status" class="brief-status" role="status"></p>
         </details>
+        <button id="wipe-session" class="text-link wipe-session" type="button" hidden>Wipe session</button>
       </aside>
       <section class="results" aria-label="Research and results">
         <section class="workflow-preview" aria-labelledby="workflow-preview-title">
@@ -276,6 +277,18 @@
       <button id="download-share" class="secondary" type="button">Download image</button>
     </div>
     <p id="share-status" class="share-status" role="status"></p>
+  </dialog>
+  <dialog id="wipe-dialog" aria-labelledby="wipe-title" aria-describedby="wipe-description">
+    <form id="wipe-form">
+      <h2 id="wipe-title">Wipe this session?</h2>
+      <p id="wipe-description">Delete all your saved searches and research memory from the Gift Search worker, and clear this tab’s brief, results, and chat.</p>
+      <p>Downloads, shared copies, and provider records are outside this wipe.</p>
+      <div class="wipe-actions">
+        <button id="cancel-wipe" class="secondary" type="button" autofocus>Cancel</button>
+        <button id="confirm-wipe" class="primary" type="submit">Wipe session</button>
+      </div>
+      <p id="wipe-status" class="brief-status" role="status"></p>
+    </form>
   </dialog>
   <script src="./assets/markdown-it.min.js"></script>
   <script type="module" src="./dashboard.js"></script>
