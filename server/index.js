@@ -2,11 +2,12 @@ import { createServer } from "node:http";
 import { spawn } from "node:child_process";
 import { validBrief } from "../skills/gift-search/scripts/report.mjs";
 import { readSerpApiKey } from "../skills/gift-search/scripts/shopping.mjs";
-import { chatWithHarness, searchWithHarness } from "./claude-acp.js";
+import { chatWithHarness, managedSessionFiles, searchWithHarness, wipeWorkspaces } from "./claude-acp.js";
 import { readDashboardAsset } from "./dashboard-assets.js";
 import { MAX_RESEARCH_TURNS } from "./gift-team.js";
+import { gridStorageKey } from "./grid-session.js";
 import { availableHarnesses, harnessCommand, harnesses } from "./harnesses.js";
-import { listRuns, loadRun, newRun, runSummary, saveRun } from "./run-history.js";
+import { listRuns, loadRun, newRun, prepareGridHistory, runSummary, saveRun, wipeRuns } from "./run-history.js";
 import { liveReport, searchGifts } from "./search.js";
 
 const port = Number(process.env.PORT || 8000);
@@ -17,6 +18,13 @@ const demoOnly = process.argv.includes("--demo");
 const apiKey = demoOnly ? undefined : process.env.OPENAI_API_KEY?.trim();
 const useHarnesses = !demoOnly && process.argv.includes("--claude-acp");
 const liveEnabled = useHarnesses || Boolean(apiKey);
+const sessionWipe = useHarnesses && Boolean(gridStorageKey);
+if (sessionWipe) {
+  if (!managedSessionFiles || !process.env.GIFT_HISTORY_DIR?.trim()) {
+    throw new Error("Set dedicated history and session directories for the paired Grid account.");
+  }
+  await prepareGridHistory();
+}
 const serpApiKey = liveEnabled ? await readSerpApiKey().catch((error) => {
   console.warn(error.message);
   return null;
@@ -25,6 +33,8 @@ const model = process.env.OPENAI_GIFT_MODEL || "gpt-5-mini";
 const hosts = new Set([`127.0.0.1:${port}`, `localhost:${port}`]);
 let searching = false;
 let activeRunId = null;
+let activeSessionRequests = 0;
+let wipingSession = false;
 
 function sendJson(response, status, body) {
   response.writeHead(status, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
@@ -71,7 +81,7 @@ function startStream(response) {
 }
 
 function logActivity(event) {
-  if (process.env.GIFT_CLAUDE_CONSOLE !== "1") return;
+  if (sessionWipe || process.env.GIFT_CLAUDE_CONSOLE !== "1") return;
   if (event.kind === "planning-start") console.log(`[Team planner] Creating personas for turn ${event.turn}`);
   if (event.kind === "team-plan") console.log(`[Team planner] Turn ${event.turn} · ${[...event.scouts, event.reviewer].map(({ name }) => name).join(", ")}`);
   if (event.kind === "turn-start") console.log(`[Coordinator] Turn ${event.turn} of ${event.researchTurns}`);
@@ -257,17 +267,52 @@ async function handleHistory(request, response, id) {
   }
 }
 
+async function handleWipe(request, response) {
+  if (!sessionWipe) return sendJson(response, 404, { error: "Session wipe is unavailable." });
+  if (request.method !== "POST") return sendJson(response, 405, { error: "Use POST to wipe the session." });
+  if (!localJson(request)) return sendJson(response, 403, { error: "Open the dashboard to wipe the session." });
+  if (wipingSession || activeSessionRequests) {
+    return sendJson(response, 409, { error: "Wait for active searches and chat replies to finish, then try again." });
+  }
+  wipingSession = true;
+  try {
+    await wipeWorkspaces();
+    await wipeRuns();
+    sendJson(response, 200, { wiped: true });
+  } catch {
+    sendJson(response, 500, { error: "The session could not be fully wiped. Try again." });
+  } finally {
+    wipingSession = false;
+  }
+}
+
 const server = createServer(async (request, response) => {
   if (!hosts.has(request.headers.host)) return sendJson(response, 403, { error: "Use the loopback dashboard address." });
 
   const path = request.url.split("?")[0];
-  if (path === "/api/search") return handleSearch(request, response);
-  if (path === "/api/chat" || path === "/api/claude/chat") return handleChat(request, response);
-  if (path === "/api/runs" || path.startsWith("/api/runs/")) return handleHistory(request, response, path.slice("/api/runs/".length));
+  if (sessionWipe && path.startsWith("/api/") && path !== "/api/config"
+      && request.headers["x-gift-grid-account"] !== gridStorageKey) {
+    return sendJson(response, 403, { error: "Open Gift Search from the paired Grid account." });
+  }
+  if (path === "/api/session/wipe") return handleWipe(request, response);
+  const historyRoute = path === "/api/runs" || path.startsWith("/api/runs/");
+  const chatRoute = path === "/api/chat" || path === "/api/claude/chat";
+  if (path === "/api/search" || chatRoute || historyRoute) {
+    if (wipingSession) return sendJson(response, 409, { error: "The session is being wiped. Try again in a moment." });
+    activeSessionRequests++;
+    try {
+      if (path === "/api/search") return await handleSearch(request, response);
+      if (chatRoute) return await handleChat(request, response);
+      return await handleHistory(request, response, path.slice("/api/runs/".length));
+    } finally {
+      activeSessionRequests--;
+    }
+  }
   if (path === "/api/config" && request.method === "GET") {
     return sendJson(response, 200, {
       live: liveEnabled, shopping: liveEnabled && Boolean(serpApiKey), claude: useHarnesses, maxResearchTurns: MAX_RESEARCH_TURNS,
       ...(useHarnesses && { harnesses: availableHarnesses(), defaultHarness: "claude", history: true }),
+      ...(sessionWipe && { sessionWipe: true }),
     });
   }
 

@@ -25,7 +25,8 @@
               { "action": "proxy:GET", "defaultEffect": "allow", "requiredScopes": ["gift-search:read"] },
               { "action": "proxy:HEAD", "defaultEffect": "allow", "requiredScopes": ["gift-search:read"] },
               { "action": "gift-search-run", "method": "POST", "path": "/api/search", "defaultEffect": "allow", "requiredScopes": ["gift-search:live"] },
-              { "action": "gift-search-chat", "method": "POST", "path": "/api/chat", "defaultEffect": "allow", "requiredScopes": ["gift-search:live"] }
+              { "action": "gift-search-chat", "method": "POST", "path": "/api/chat", "defaultEffect": "allow", "requiredScopes": ["gift-search:live"] },
+              { "action": "gift-search-wipe", "method": "POST", "path": "/api/session/wipe", "defaultEffect": "allow", "requiredScopes": ["gift-search:live"] }
             ]
           },
           "provides": { "mcp": [], "agents": [], "workflows": [] },

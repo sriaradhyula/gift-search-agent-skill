@@ -2,9 +2,49 @@ import { randomUUID } from "node:crypto";
 import { mkdir, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
+import { gridStorageKey } from "./grid-session.js";
 
-const historyDir = resolve(process.env.GIFT_HISTORY_DIR?.trim() || join(homedir(), ".local", "state", "gift-search", "runs"));
+const historyRoot = resolve(process.env.GIFT_HISTORY_DIR?.trim() || join(homedir(), ".local", "state", "gift-search", "runs"));
+const historyDir = gridStorageKey ? join(historyRoot, "grid", gridStorageKey) : historyRoot;
 const runIdPattern = /^[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}$/;
+
+async function readDirectory(directory) {
+  return readdir(directory).catch((error) => {
+    if (error.code === "ENOENT") return [];
+    throw error;
+  });
+}
+
+function runFile(file) {
+  return file.endsWith(".json") && runIdPattern.test(file.slice(0, -5));
+}
+
+function checkpointFile(file) {
+  const parts = /^\.([a-f0-9-]+)\.([a-f0-9-]+)\.tmp$/.exec(file);
+  return parts && runIdPattern.test(parts[1]) && runIdPattern.test(parts[2]);
+}
+
+export async function prepareGridHistory() {
+  await mkdir(historyDir, { recursive: true, mode: 0o700 });
+  // The old volume had one paired account. Claim its unscoped history exactly once.
+  const claim = join(historyRoot, ".grid-history-owner");
+  try {
+    await writeFile(claim, gridStorageKey, { flag: "wx", mode: 0o600 });
+  } catch (error) {
+    if (error.code !== "EEXIST") throw error;
+  }
+  if (await readFile(claim, "utf8") !== gridStorageKey) return;
+  for (const file of await readDirectory(historyRoot)) {
+    if (runFile(file)) await rename(join(historyRoot, file), join(historyDir, file));
+    if (checkpointFile(file)) await rm(join(historyRoot, file), { force: true });
+  }
+}
+
+export async function wipeRuns() {
+  for (const file of await readDirectory(historyDir)) {
+    if (runFile(file) || checkpointFile(file)) await rm(join(historyDir, file), { force: true });
+  }
+}
 
 export function newRun(brief, harness, report) {
   const createdAt = new Date().toISOString();
@@ -51,12 +91,9 @@ export function runSummary(record, activeRunId) {
 }
 
 export async function listRuns(activeRunId) {
-  const files = await readdir(historyDir).catch((error) => {
-    if (error.code === "ENOENT") return [];
-    throw error;
-  });
+  const files = await readDirectory(historyDir);
   const records = await Promise.all(files
-    .filter((file) => file.endsWith(".json"))
+    .filter(runFile)
     .map((file) => loadRun(file.slice(0, -5)).catch(() => null)));
   return records.filter(Boolean).map((record) => runSummary(record, activeRunId))
     .sort((first, second) => second.updatedAt.localeCompare(first.updatedAt));

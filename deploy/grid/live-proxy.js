@@ -3,7 +3,7 @@ import { request as upstreamRequest } from "node:http";
 const runPath = /^\/api\/runs\/[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/;
 
 export function isLiveRoute(method, path) {
-  if (method === "POST") return path === "/api/search" || path === "/api/chat";
+  if (method === "POST") return path === "/api/search" || path === "/api/chat" || path === "/api/session/wipe";
   return method === "GET" && (path === "/api/config" || path === "/api/runs" || runPath.test(path));
 }
 
@@ -12,12 +12,13 @@ export function replyJson(response, status, value) {
   response.end(JSON.stringify(value));
 }
 
-export function forwardLiveRequest(request, response, target, { token, path }) {
+export function forwardLiveRequest(request, response, target, { token, path, gridAccount }) {
   const headers = {};
   for (const name of ["accept", "content-type", "content-length"]) {
     if (request.headers[name]) headers[name] = request.headers[name];
   }
   if (token) headers.authorization = `Bearer ${token}`;
+  if (gridAccount) headers["x-gift-grid-account"] = gridAccount;
 
   const upstream = upstreamRequest(new URL(path, target), {
     method: request.method, headers, timeout: 190_000,
