@@ -359,9 +359,9 @@ function updateBudgetLimit() {
   budgetInput.readOnly = priceComparison.checked;
 }
 
-function showReport(nextReport, runId) {
+function showReport(nextReport, { runId, visible = true } = {}) {
   report = nextReport;
-  reportVisible = true;
+  reportVisible = visible;
   displayedRunId = runId;
   sort.value = "recommended";
   render();
@@ -402,7 +402,7 @@ function openReport(nextReport, saved) {
   showReportBrief(brief, saved?.refinementFocus);
   loadedRun = undefined;
   select("resume-run").hidden = true;
-  showReport(nextReport, saved?.id);
+  showReport(nextReport, { runId: saved?.id });
 }
 
 function showBriefForm() {
@@ -418,9 +418,8 @@ function showBriefForm() {
 select("new-search").addEventListener("click", () => {
   showBriefForm();
   message();
-  reportVisible = false;
   resetTeam(teamIntroduction);
-  render();
+  showReport(runSample(readBrief()), { visible: false });
   select("recipient").focus();
 });
 
@@ -596,7 +595,7 @@ async function startSearch(body, saved) {
         showReportBrief(completed.brief, body.refinement.focus);
         select("additional-turns").value = "1";
       }
-      showReport(completed, runId);
+      showReport(completed, { runId });
       finishTeam(completed.gifts.length);
       if (events.length) lastRun = { id: runId, events, report: completed, harness, completed: true };
     } else {
@@ -631,7 +630,7 @@ select("replay-run").addEventListener("click", async () => {
   try {
     const { id, events, report, harness, completed } = lastRun;
     await replayTimeline(events, `Replay · ${harness.label}`, report.gifts.length, { consoleLabel: `${harness.label} console`, completed });
-    showReport(report, id);
+    showReport(report, { runId: id });
   } finally {
     setRunning(false);
   }
@@ -733,6 +732,8 @@ function currentChatBrief() {
 }
 
 function chatContext() {
+  const gifts = reportVisible ? report.gifts : [];
+  const notes = reportVisible ? report.notes : [];
   return {
     research: {
       runId: displayedRunId,
@@ -743,8 +744,8 @@ function chatContext() {
     latestShortlist: {
       mode: report.mode,
       brief: currentChatBrief(),
-      gifts: report.gifts.slice(0, 5).map(({ name, merchant, price, url, caveat }) => ({ name, merchant, price, url, caveat })),
-      notes: report.notes.slice(0, 8).map((note) => note.slice(0, 500)),
+      gifts: gifts.slice(0, 5).map(({ name, merchant, price, url, caveat }) => ({ name, merchant, price, url, caveat })),
+      notes: notes.slice(0, 8).map((note) => note.slice(0, 500)),
     },
   };
 }
