@@ -9,6 +9,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 import { SignJWT } from "jose";
+import { runGiftTeam } from "../../server/gift-team.js";
 
 async function availablePort() {
   const reservation = createServer().listen(0, "127.0.0.1");
@@ -19,6 +20,52 @@ async function availablePort() {
 }
 
 const accountKey = (subject) => createHash("sha256").update(subject).digest("hex");
+
+test("Refinement keeps the previous board and rechecks earlier picks against the edited brief", async () => {
+  const brief = { budget: 35, currency: "USD" };
+  const focus = "Find a compact puzzle to add to the gift.";
+  const oldUrl = "https://retailer.example/old-gift";
+  const newUrl = "https://retailer.example/desk-puzzle";
+  const reviewer = { id: "review", name: "Reviewer", persona: "Retail specialist", focus: "Verify listings." };
+  const board = [{ id: 1, turn: 1, author: "Reviewer", text: "Prior research", type: "update" }];
+  const listing = (candidateId, url, name, price) => ({
+    candidateId, url, name, price, category: "Puzzles", currency: "USD", merchant: "Fixture shop",
+    reason: "Compact", caveat: "", inStock: true, shipsToRegion: true, shippingCost: 5,
+  });
+  let checkpoint;
+  const result = await runGiftTeam(brief, {
+    focus, recheckGifts: [listing(0, oldUrl, "Old gift", 50)],
+    resume: { completedTurns: 1, board, reviewer, notes: ["Prior review notes"], verified: [[0, listing(0, oldUrl, "Old gift", 50)]] },
+    async plan(currentBrief, totalTurns, context) {
+      assert.equal(currentBrief.budget, 35);
+      assert.equal(totalTurns, 2);
+      assert.deepEqual(context.board[0], board[0]);
+      assert.match(context.board.at(-1).text, /compact puzzle/);
+      return { scouts: [
+        { name: "Puzzle scout", persona: "Puzzle researcher", focus: "Look for a puzzle." },
+        { name: "Desk scout", persona: "Small-space gift researcher", focus: "Look for compact options." },
+      ] };
+    },
+    async scout() {
+      return { candidates: [{ seedId: null, name: "Desk puzzle", merchant: "Fixture shop", url: newUrl, reason: "Compact" }] };
+    },
+    async review(_role, currentBrief, candidates) {
+      assert.equal(currentBrief.budget, 35);
+      assert.deepEqual(candidates.map(({ url }) => url), [newUrl, oldUrl]);
+      return {
+        gifts: candidates.map(({ candidateId, url, name }) => listing(candidateId, url, name, url === newUrl ? 27 : 50)),
+        fetched: new Set([newUrl, oldUrl]),
+        rejected: [{ candidateId: 0, reason: "The price exceeds the edited budget." }], notes: [],
+      };
+    },
+    async onCheckpoint(state) { checkpoint = state; },
+  });
+  assert.equal(checkpoint.completedTurns, 2);
+  assert.deepEqual(checkpoint.board[0], board[0]);
+  assert.ok(checkpoint.board.some(({ text, turn }) => turn === 2 && text.includes(focus)));
+  assert.deepEqual(result.gifts.map(({ name }) => name), ["Desk puzzle"]);
+  assert.equal(result.leads[0].review, "The price exceeds the edited budget.");
+});
 
 async function gridRuntime(t, env = {}) {
   const port = await availablePort();

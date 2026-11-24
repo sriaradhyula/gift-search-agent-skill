@@ -358,6 +358,8 @@ body:has(.chat-dock:not([hidden])) .dashboard { padding-bottom: 76px; }
 .chat-markdown :is(ul, ol) { padding-inline-start: 23px; margin-bottom: 0; }
 .chat-markdown blockquote { margin-inline: 0; padding-left: 9px; border-left: 2px solid #6d9c83; }
 .chat-link { padding: 0; border: 0; background: none; color: #b4efc6; font: inherit; text-decoration: underline; text-align: start; }
+.refine-search { margin: 8px 2px 0; font-size: .8rem; }
+.refine-search:disabled { opacity: .55; }
 .chat-markdown code { font: .92em ui-monospace, monospace; background: #244336; border-radius: 3px; padding: 1px 3px; }
 .chat-markdown pre { max-width: 100%; overflow: auto; padding: 9px; border-radius: 5px; background: #203a2f; }
 .chat-markdown pre code { background: none; padding: 0; }
@@ -441,10 +443,18 @@ dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
 #link-inspection-url { display: block; margin-top: 5px; padding: 9px; border-radius: 6px; background: var(--wash); overflow-wrap: anywhere; }
 .close-button { position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; border: 0; border-radius: 50%; background: var(--wash); color: var(--ink); font-size: 1.3rem; }
 #share-dialog { width: min(540px, calc(100% - 32px)); }
+#refine-dialog { width: min(520px, calc(100% - 32px)); }
+.refine-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+.refine-fields .field, .refine-fields .price-comparison { margin: 0; }
+.refine-wide { grid-column: 1 / -1; }
+#refine-focus {
+  max-width: 100%; padding: 9px 10px; resize: vertical;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--input); color: var(--ink); font: inherit;
+}
 .share-format { margin-top: 16px; }
 #share-preview { width: 100%; padding: 11px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); background: var(--warm-panel); resize: vertical; font: inherit; font-size: .85rem; line-height: 1.5; }
-.share-actions, .wipe-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-#wipe-status:empty { display: none; }
+.share-actions, .wipe-actions, .refine-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+#wipe-status:empty, #refine-status:empty { display: none; }
 #share-dialog .share-status { margin-top: 8px; color: var(--muted); font-size: .82rem; }
 #share-dialog .share-status:empty { margin-top: 0; }
 
@@ -784,8 +794,34 @@ dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
         <textarea id="claude-question" rows="2" placeholder="Ask anything…" required></textarea>
         <button id="send-claude" class="secondary" type="submit">Send</button>
       </div>
+      <button id="refine-search" class="chat-link refine-search" type="button" hidden>Refine search</button>
     </form>
   </aside>
+  <dialog id="refine-dialog" aria-labelledby="refine-title">
+    <form id="refine-form" autocomplete="off">
+      <h2 id="refine-title">Refine search</h2>
+      <p>Review the brief before sending it to the research team for one more turn.</p>
+      <div class="refine-fields">
+        <div class="field refine-wide"><label for="refine-focus">Research focus</label><textarea id="refine-focus" name="focus" rows="3" maxlength="600" required autofocus></textarea></div>
+        <div class="field"><label for="refine-recipient">Recipient</label><input id="refine-recipient" name="recipient" maxlength="100" required></div>
+        <div class="field"><label for="refine-occasion">Occasion</label><input id="refine-occasion" name="occasion" maxlength="100" required></div>
+        <div class="field refine-wide"><label for="refine-interests">Interests</label><input id="refine-interests" name="interests" maxlength="240"></div>
+        <div class="field"><label for="refine-budget">Max budget</label><input type="number" id="refine-budget" name="budget" min="0.01" max="1000000" step="0.01" required></div>
+        <div class="field"><label for="refine-currency">Currency</label><input id="refine-currency" name="currency" pattern="[A-Za-z]{3}" maxlength="3" required></div>
+        <div class="field"><label for="refine-region">Delivery region</label><input id="refine-region" name="region" maxlength="80" required></div>
+        <div class="field"><label for="refine-needed-by">Needed by</label><input type="date" id="refine-needed-by" name="neededBy"></div>
+        <div class="field refine-wide"><label for="refine-exclude">Exclusions</label><input id="refine-exclude" name="exclude" maxlength="200"></div>
+        <label id="refine-comparison-control" class="price-comparison refine-wide">
+          <input type="checkbox" id="refine-compare-price-bands" name="comparePriceBands"> Compare $25–$50 and $50–$100
+        </label>
+      </div>
+      <p id="refine-status" class="brief-status" role="status"></p>
+      <div class="refine-actions">
+        <button id="cancel-refinement" class="secondary" type="button">Cancel</button>
+        <button class="primary" type="submit">Run follow-up</button>
+      </div>
+    </form>
+  </dialog>
   <dialog id="gift-detail" aria-labelledby="detail-title">
     <form method="dialog"><button class="close-button" aria-label="Close gift details">×</button></form>
     <p class="card-category" id="detail-category"></p>
@@ -1618,16 +1654,21 @@ function chatMarkdown() {
   return md;
 }
 
-function enableChat({ endpoint, getContext, getHarness, onActivity, onInspectLink }) {
+function enableChat({ endpoint, getContext, getHarness, onActivity, onInspectLink, onRefine }) {
   const form = document.getElementById("claude-chat");
   const field = document.getElementById("claude-question");
   const messages = document.getElementById("claude-messages");
   const jump = document.getElementById("open-claude-chat");
+  const refine = document.getElementById("refine-search");
   const markdown = chatMarkdown();
   const histories = new Map();
   const linkDestinations = new WeakMap();
   const queue = [];
   let draining = false;
+  let latestReply;
+  let suggestion;
+  refine.hidden = !onRefine;
+  refine.addEventListener("click", () => onRefine?.(suggestion));
 
   function appendMessage(speaker, text, className) {
     const article = document.createElement("article");
@@ -1669,6 +1710,7 @@ function enableChat({ endpoint, getContext, getHarness, onActivity, onInspectLin
     if (!histories.has(harness.id)) histories.set(harness.id, []);
     const history = histories.get(harness.id);
     let text = "";
+    let focus;
     let completed = false;
     let frame;
     reply.textContent = "Thinking…";
@@ -1677,7 +1719,7 @@ function enableChat({ endpoint, getContext, getHarness, onActivity, onInspectLin
       const message = { role: "user", content };
       const response = await fetch(endpoint, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ harness: harness.id, messages: [...history, message], context }),
+        body: JSON.stringify({ harness: harness.id, messages: [...history, message], context, suggestRefinement: Boolean(onRefine) }),
       });
       await consumeEvents(response, (event) => {
         if (event.kind === "text") {
@@ -1688,11 +1730,13 @@ function enableChat({ endpoint, getContext, getHarness, onActivity, onInspectLin
               showReply(reply, text);
             });
           }
-        } else if (event.kind === "done") completed = true;
+        } else if (event.kind === "refinement") focus = event.focus;
+        else if (event.kind === "done") completed = true;
         else onActivity(event);
       });
       if (!completed || !text.trim()) throw new Error(`${harness.label} did not return a reply.`);
       showReply(reply, text);
+      if (reply === latestReply && typeof focus === "string") suggestion = { focus, context };
       history.push(message, { role: "assistant", content: text.trim() });
       while (history.length > 10 || history.reduce((length, entry) => length + entry.content.length, 0) > 160_000) {
         history.splice(0, 2);
@@ -1729,6 +1773,8 @@ function enableChat({ endpoint, getContext, getHarness, onActivity, onInspectLin
     const harness = getHarness();
     appendMessage("You", content, "chat-prompt");
     const reply = appendMessage(harness.label, "Queued…", "chat-markdown");
+    latestReply = reply;
+    suggestion = undefined;
     queue.push({ content, context: getContext(), reply, harness });
     messages.scrollTop = messages.scrollHeight;
     field.focus();
@@ -1936,6 +1982,8 @@ const savedRuns = select("saved-runs");
 const region = select("region");
 const dialog = select("gift-detail");
 const linkInspection = select("link-inspection");
+const refineDialog = select("refine-dialog");
+const refineForm = select("refine-form");
 const demoChoice = select("demo-scenario");
 const gridMount = document.querySelector('meta[name="gift-search-mount"]')?.content;
 const wipedSessionKey = "gift-search-session-wiped";
@@ -1958,6 +2006,8 @@ let historyEnabled = false;
 let wipeEnabled = false;
 let loadingRun = false;
 let loadedRun;
+let displayedRunId;
+let refinementSource;
 const harnessOptions = new Map();
 let runAbort;
 let lastRun;
@@ -2255,8 +2305,9 @@ function updateBudgetLimit() {
   budgetInput.readOnly = priceComparison.checked;
 }
 
-function showReport(nextReport) {
+function showReport(nextReport, runId) {
   report = nextReport;
+  displayedRunId = runId;
   sort.value = "recommended";
   render();
 }
@@ -2266,9 +2317,7 @@ function showSampleBrief(brief) {
   showReport(runSample(brief));
 }
 
-function openReport(nextReport) {
-  const { brief } = validateReport(nextReport);
-  resetTeam(teamIntroduction);
+function showReportBrief(brief, focus) {
   const fields = [
     ["Recipient", brief.recipient],
     ["Occasion", brief.occasion],
@@ -2277,6 +2326,7 @@ function openReport(nextReport) {
     ["Ship to", brief.region],
     ["Needed by", brief.neededBy],
     ["Exclusions", brief.exclude],
+    ["Research focus", focus],
   ];
   const list = select("report-brief-fields");
   list.replaceChildren(...fields.filter(([, value]) => value).map(([label, value]) => {
@@ -2286,11 +2336,17 @@ function openReport(nextReport) {
   }));
   form.hidden = true;
   surprise.hidden = true;
-  loadedRun = undefined;
-  select("resume-run").hidden = true;
   briefStatus.textContent = "";
   select("report-brief").hidden = false;
-  showReport(nextReport);
+}
+
+function openReport(nextReport, saved) {
+  const { brief } = validateReport(nextReport);
+  resetTeam(teamIntroduction);
+  showReportBrief(brief, saved?.refinementFocus);
+  loadedRun = undefined;
+  select("resume-run").hidden = true;
+  showReport(nextReport, saved?.id);
 }
 
 function showBriefForm() {
@@ -2350,6 +2406,7 @@ function updateTeamActions() {
   select("continue-run").disabled = running || loadingRun || !canResume;
   select("additional-turns").disabled = running || loadingRun || !canResume;
   select("new-search").disabled = running || loadingRun;
+  select("refine-search").disabled = running || loadingRun;
 }
 
 select("stop-run").addEventListener("click", () => runAbort?.abort());
@@ -2399,7 +2456,7 @@ select("load-run").addEventListener("click", async () => {
   updateTeamActions();
   try {
     const saved = await readHistory(liveApi(`runs/${encodeURIComponent(savedRuns.value)}`));
-    openReport(saved.report);
+    openReport(saved.report, saved);
     loadedRun = saved;
     if (harnessOptions.get(saved.harness)?.available) harnessChoice.value = saved.harness;
     updateChatVisibility();
@@ -2407,7 +2464,7 @@ select("load-run").addEventListener("click", async () => {
     restoreTimeline(`Saved ${harness.label} run`, saved.events, harness);
     if (saved.status === "complete") finishTeam(saved.report.gifts.length);
     else if (saved.status !== "running") stopTeam();
-    lastRun = { events: saved.events, report: saved.report, harness, completed: saved.status === "complete" };
+    lastRun = { id: saved.id, events: saved.events, report: saved.report, harness, completed: saved.status === "complete" };
     const summary = `${saved.completedTurns} ${saved.completedTurns === 1 ? "turn" : "turns"} saved.`;
     select("history-status").textContent = saved.status === "running" ? "This run is still active."
       : `${summary}${saved.status === "complete" ? "" : " Continue from the last completed turn."}`;
@@ -2473,9 +2530,13 @@ async function startSearch(body, saved) {
         }
       });
       if (!completed) throw new Error("The agent team did not finish the shortlist.");
-      showReport(completed);
+      if (body.refinement) {
+        showReportBrief(completed.brief, body.refinement.focus);
+        select("additional-turns").value = "1";
+      }
+      showReport(completed, runId);
       finishTeam(completed.gifts.length);
-      if (events.length) lastRun = { events, report: completed, harness, completed: true };
+      if (events.length) lastRun = { id: runId, events, report: completed, harness, completed: true };
     } else {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Live search could not finish.");
@@ -2487,7 +2548,7 @@ async function startSearch(body, saved) {
   } finally {
     const stopped = runAbort?.signal.aborted;
     runAbort = undefined;
-    if (saved && runId && historyEnabled) {
+    if ((saved || body.refinement) && runId && historyEnabled) {
       try {
         loadedRun = await readHistory(liveApi(`runs/${encodeURIComponent(runId)}`));
         if (stopped && loadedRun.status === "running") loadedRun.status = "stopped";
@@ -2506,9 +2567,9 @@ select("replay-run").addEventListener("click", async () => {
   message();
   setRunning(true);
   try {
-    const { events, report, harness, completed } = lastRun;
+    const { id, events, report, harness, completed } = lastRun;
     await replayTimeline(events, `Replay · ${harness.label}`, report.gifts.length, { consoleLabel: `${harness.label} console`, completed });
-    showReport(report);
+    showReport(report, id);
   } finally {
     setRunning(false);
   }
@@ -2571,21 +2632,85 @@ select("run-demo").addEventListener("click", async () => {
   }
 });
 
+function currentChatBrief() {
+  return report.mode === "sample" && !form.hidden ? readBrief() : report.brief;
+}
+
 function chatContext() {
   return {
     research: {
+      runId: displayedRunId,
       activeTurn: select("team-turn").hidden ? null : select("team-turn").textContent,
       inProgress: Boolean(runAbort),
       handoffs: recentResearchNotes(),
     },
     latestShortlist: {
       mode: report.mode,
-      brief: report.brief,
+      brief: currentChatBrief(),
       gifts: report.gifts.slice(0, 5).map(({ name, merchant, price, url, caveat }) => ({ name, merchant, price, url, caveat })),
       notes: report.notes.slice(0, 8).map((note) => note.slice(0, 500)),
     },
   };
 }
+
+function updateRefineCurrency() {
+  const comparison = refineForm.elements.namedItem("comparePriceBands");
+  const usd = refineForm.elements.namedItem("currency").value.trim().toUpperCase() === "USD";
+  select("refine-comparison-control").hidden = !usd;
+  comparison.disabled = !usd;
+}
+
+async function openRefinement(suggestion) {
+  if (!searchesLive() || running || loadingRun || refineDialog.open) return;
+  const runId = displayedRunId;
+  const currentBrief = currentChatBrief();
+  loadingRun = true;
+  updateTeamActions();
+  try {
+    const saved = runId && historyEnabled ? await readHistory(liveApi(`runs/${encodeURIComponent(runId)}`)) : undefined;
+    if (saved?.status === "running") throw new Error("Wait for this search to finish before refining it.");
+    const brief = saved?.report.brief ?? currentBrief;
+    const fields = refineForm.elements;
+    for (const name of ["recipient", "occasion", "interests", "budget", "currency", "region", "neededBy", "exclude"]) {
+      fields.namedItem(name).value = brief[name] ?? "";
+    }
+    const sameBrief = suggestion && suggestion.context.research.runId === runId
+      && JSON.stringify(suggestion.context.latestShortlist.brief) === JSON.stringify(brief);
+    fields.namedItem("focus").value = sameBrief ? suggestion.focus : "";
+    fields.namedItem("comparePriceBands").checked = brief.comparePriceBands === true;
+    updateRefineCurrency();
+    refinementSource = saved;
+    select("refine-status").textContent = "";
+    refineDialog.showModal();
+  } catch (error) {
+    message(error.message || "Could not open the refinement brief.");
+  } finally {
+    loadingRun = false;
+    updateTeamActions();
+  }
+}
+
+select("refine-currency").addEventListener("input", updateRefineCurrency);
+select("cancel-refinement").addEventListener("click", () => refineDialog.close());
+refineForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (running || loadingRun || !searchesLive()) return;
+  const { focus, ...fields } = Object.fromEntries(new FormData(refineForm));
+  const brief = {
+    ...fields, recipient: fields.recipient.trim(), occasion: fields.occasion.trim(), interests: fields.interests.trim(),
+    budget: Number(fields.budget), currency: fields.currency.trim().toUpperCase(), region: fields.region.trim(),
+    neededBy: fields.neededBy || null, exclude: fields.exclude.trim(),
+    ...(fields.comparePriceBands && { comparePriceBands: true }),
+  };
+  if (!focus.trim() || !validBrief(brief) || !brief.recipient || !brief.occasion || !brief.region) {
+    select("refine-status").textContent = "Enter a valid brief and research focus.";
+    return;
+  }
+  const saved = refinementSource;
+  const refinement = { brief, focus: focus.trim(), ...(saved && { expectedUpdatedAt: saved.updatedAt }) };
+  refineDialog.close();
+  await startSearch({ refinement, researchTurns: 1, ...(saved && { runId: saved.id }) }, saved);
+});
 
 function updateInterestSuggestions() {
   const chosen = interestsInput.value.trim().toLowerCase();
@@ -2675,6 +2800,7 @@ async function checkLiveAvailability() {
       if (harnessChoice.value) enableChat({
         endpoint: liveApi("chat"), getContext: chatContext, getHarness: selectedHarness, onActivity: showTeamEvent,
         onInspectLink: inspectLink,
+        onRefine: config.refinements === true ? openRefinement : undefined,
       });
       historyEnabled = config.history === true;
       if (gridMount && historyEnabled) select("search-history").open = true;
