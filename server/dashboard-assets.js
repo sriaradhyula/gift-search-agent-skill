@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { extname } from "node:path";
 
 const files = new Set([
-  "dashboard.html", "guide.html", "architecture.html", "styles.css", "site.css", "dashboard.js", "guide.js", "report.js", "sample.js", "demos.js", "team.js", "chat.js", "share.js",
+  "dashboard.html", "guide.html", "architecture.html", "styles.css", "site.css", "dashboard.js", "guide.js", "theme.js", "report.js", "sample.js", "demos.js", "team.js", "chat.js", "share.js",
   "assets/catalog.webp", "assets/christmas-gifts.webp", "assets/markdown-it.min.js", "examples/coffee-birthday.json",
 ]);
 const mime = {

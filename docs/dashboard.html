@@ -4,8 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Find thoughtful gifts with a multi-agent search. Try the sample dashboard or install the Gift Search skill.">
-  <meta name="theme-color" content="#fbf5ee">
+  <meta name="color-scheme" content="light dark">
   <title>Gift Search · Multi-agent Collaboration</title>
+  <script src="./theme.js"></script>
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body class="holiday-dashboard">
@@ -22,10 +23,20 @@
         <a href="./dashboard.html" aria-current="page">Agent run</a>
         <a href="./guide.html">Skill guide</a>
       </nav>
-      <label class="demo-switch">
-        <span>Demo mode</span>
-        <input id="demo-mode" type="checkbox" autocomplete="off" role="switch" aria-controls="demo-controls">
-      </label>
+      <div class="header-controls">
+        <label class="demo-switch">
+          <span>Demo mode</span>
+          <input id="demo-mode" type="checkbox" autocomplete="off" role="switch" aria-controls="demo-controls">
+        </label>
+        <label class="theme-picker">
+          <span class="theme-label">Theme</span>
+          <select id="theme-choice">
+            <option value="system">System</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </label>
+      </div>
     </div>
   </header>
   <main class="shell dashboard" id="main">
