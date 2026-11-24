@@ -87,9 +87,6 @@ h2 { letter-spacing: -0.035em; }
 .intro > div:first-child { max-width: 60%; }
 .intro h1 { font-size: clamp(1.8rem, 3.35vw, 3rem); }
 .intro h1 em { color: var(--gold); white-space: nowrap; }
-.intro-actions { display: flex; flex-wrap: wrap; gap: 8px; flex: none; }
-.intro-actions .secondary { background: #591123; border-color: #e4ac86; color: var(--cream); }
-.intro-actions .secondary:hover { background: #7b1a35; }
 .primary, .secondary {
   min-height: 42px;
   padding: 10px 15px;
@@ -447,7 +444,6 @@ dialog p:not(.card-category) { margin-top: 10px; line-height: 1.5; }
 }
 
 @media (max-width: 370px) {
-  .intro-actions .secondary { padding-inline: 10px; font-size: .8rem; }
   .header-inner { flex-wrap: wrap; gap: 4px 12px; padding-top: 8px; }
   .site-nav { order: 1; width: 100%; min-height: 32px; }
 }

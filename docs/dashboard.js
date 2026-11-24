@@ -19,7 +19,6 @@ const demoMode = select("demo-mode");
 const harnessChoice = select("run-harness");
 const savedRuns = select("saved-runs");
 const region = select("region");
-const file = select("import-file");
 const dialog = select("gift-detail");
 const demoChoice = select("demo-scenario");
 const gridMount = document.querySelector('meta[name="gift-search-mount"]')?.content;
@@ -307,7 +306,6 @@ function setRunning(value) {
   running = value;
   select("brief-fields").disabled = value;
   surprise.disabled = value;
-  select("import-button").disabled = value;
   updateTeamActions();
   updateSearchButton();
   cards.setAttribute("aria-busy", String(value));
@@ -602,26 +600,6 @@ sort.addEventListener("change", render);
 recipientChoice.addEventListener("change", updateRecipient);
 interestsInput.addEventListener("input", updateInterestSuggestions);
 region.addEventListener("change", () => { select("budget-currency").textContent = regionCurrencies[region.value]; });
-select("import-button").addEventListener("click", () => file.click());
-file.addEventListener("change", async () => {
-  const selected = file.files[0];
-  if (!selected) return;
-  try {
-    if (selected.size > 1024 * 1024) throw new Error("Choose a report smaller than 1 MB.");
-    let imported;
-    try {
-      imported = JSON.parse(await selected.text());
-    } catch {
-      throw new Error("The selected file could not be read as JSON.");
-    }
-    openReport(imported);
-    message();
-  } catch (error) {
-    message(error.message);
-  } finally {
-    file.value = "";
-  }
-});
 
 function downloadFile(content, name, type) {
   const url = URL.createObjectURL(new Blob([content], { type }));

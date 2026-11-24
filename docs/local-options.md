@@ -30,7 +30,7 @@ Select an agent in the installer or pass `-a` with `claude-code`, `codex`, `gemi
 
 Run `npx skills update gift-search` to update an install from GitHub. For local installs, pull the checkout and rerun the installer. See the [Skills CLI options](https://github.com/vercel-labs/skills).
 
-The installed skill creates and links an HTML dashboard after each search. Use **Import results** to open the accompanying JSON in an existing dashboard. See the [dashboard helpers](../skills/gift-search/references/dashboard.md).
+The installed skill creates and links an HTML dashboard after each search. Use the [dashboard launcher](../skills/gift-search/references/dashboard.md#open-a-report) to reopen a saved JSON report.
 
 ## Search providers
 
